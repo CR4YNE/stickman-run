@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.54';
+  const VERSION = '1.0.55';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -116,7 +116,7 @@
       replaceTask: '↻', topBtn: '🏅 Рейтинг', topTitle: 'Рейтинг', topEndless: 'Бесконечный', topDaily: 'Забег дня', topStars: 'Звёзды', topCoinsDay: 'Монет за сутки', topNote: 'Рейтинг обновляется каждые 2 минуты. Каждый день в 00:00 по Москве первые три места каждого рейтинга получают случайный премиум-товар.', topUpd: 'Обновлено', topReward: '🏆 Награда за {n}-е место в рейтинге «{b}»: {i}!',
       topNoSdk: 'Рейтинг работает на Яндекс Играх.', topLogin: 'Войдите, чтобы попасть в рейтинг', login: 'Войти', you: 'Вы',
       profileBtn: '👤 Профиль', profileTitle: 'Профиль', guest: 'Гость', shortcutBtn: '📌 Ярлык +700', shortcutDone: 'Ярлык добавлен! +700',
-      trying: 'Примерка', noAdsNote: '🎁 — «Без рекламы» куплено: награды забираются без просмотра рекламы.',
+      trying: 'Примерка на 1 забег (не покупка)', trialOver: 'Примерка «{i}» закончилась. Чтобы оставить навсегда — купи в магазине', noAdsNote: '🎁 — «Без рекламы» куплено: награды забираются без просмотра рекламы.',
       st: {
         playTime: 'Время в игре', runTime: 'Время в забегах', runs: 'Забегов', endlessRuns: 'Бесконечных забегов', dist: 'Всего пробежано', best: 'Рекорд бесконечного',
         bestDaily: 'Рекорд забега дня', coins: 'Монет собрано', spent: 'Монет потрачено', wallet: 'Монет сейчас', gold: 'Золотых монет',
@@ -356,7 +356,7 @@
       replaceTask: '↻', topBtn: '🏅 Ranking', topTitle: 'Ranking', topEndless: 'Endless', topDaily: 'Daily run', topStars: 'Stars', topCoinsDay: 'Coins today', topNote: 'The ranking refreshes every 2 minutes. Every day at 00:00 Moscow time the top three of each ranking get a random premium item.', topUpd: 'Updated', topReward: '🏆 Reward for place {n} in «{b}»: {i}!',
       topNoSdk: 'Rankings work on Yandex Games.', topLogin: 'Log in to get into the ranking', login: 'Log in', you: 'You',
       profileBtn: '👤 Profile', profileTitle: 'Profile', guest: 'Guest', shortcutBtn: '📌 Shortcut +700', shortcutDone: 'Shortcut added! +700',
-      trying: 'Trying on', noAdsNote: '🎁 — "No ads" purchased: rewards are claimed without watching ads.',
+      trying: 'Trying on for 1 run (not a purchase)', trialOver: 'The try-on of «{i}» is over. Buy it in the shop to keep it', noAdsNote: '🎁 — "No ads" purchased: rewards are claimed without watching ads.',
       st: {
         playTime: 'Time played', runTime: 'Time in runs', runs: 'Runs', endlessRuns: 'Endless runs', dist: 'Total distance', best: 'Endless best',
         bestDaily: 'Daily run best', coins: 'Coins collected', spent: 'Coins spent', wallet: 'Coins now', gold: 'Gold coins',
@@ -1421,7 +1421,7 @@
   const DEFAULT_SAVE = JSON.parse(JSON.stringify(save));
   const today = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
 
-  function persist() { checkAch(); checkLevel(); checkTitles(); save.ver = VERSION; SDK.save(save); }
+  function persist() { if (state === 'loading') return; checkAch(); checkLevel(); checkTitles(); save.ver = VERSION; SDK.save(save); }   // 1.0.55: nothing is saved until the old save is loaded
   // ---------- 27.8 player level: XP for metres, coins and tasks; every 5 levels an item that isn't sold ----------
   const LVL_REWARDS = { 5: ['hat', 'laurel'], 10: ['trail', 'goldtrail'], 15: ['acc', 'medal'], 20: ['jump', 'shockwave'], 25: ['color', 'champion'], 30: ['pet', 'lvl_star'] };
   const xpNeed = L => 300 + 150 * (L - 1);
@@ -1673,7 +1673,7 @@
     dist = 0; time = 0; coinsGot = 0; picked = 0; starsGot = 0; usedContinue = false; particles = []; newRecord = false;
     lifeUsed = false; trailHist = []; petY = 0; petHist = []; crit = null; critNext = 4 + Math.random() * 6; tutWait = null; combo = 0; slowMoT = 0; slideT = 0; stopT = 0; multD = 0; multAcc = 0;
     runLook = null;
-    if (trial) { runLook = Object.assign({}, save.look, { [trial.cat]: trial.id }); trial = null; }
+    if (trial) { runLook = Object.assign({}, save.look, { [trial.cat]: trial.id }); trialName = S.items[trial.id]; trial = null; }
     shieldOn = shieldNext; shieldNext = false; x2Used = false;
     resetPlayer();
     if (save.magnetPerm) player.magnet = Infinity;   // the permanent magnet works everywhere, all the time
@@ -1689,9 +1689,11 @@
     setState('play');
   }
 
+  let trialName = null;
   function goMenu() {
     persist();
     runLook = null;
+    if (trialName) { toast(S.trialOver.replace('{i}', trialName)); trialName = null; }   // 1.0.55: the try-on is over (it was never a purchase)
     lvl = allDone() ? ENDLESS : Math.min(save.unlocked, LEVELS.length - 1);
     LV = EMPTY_LEVEL; dist = 0; particles = [];
     resetPlayer();
@@ -7578,7 +7580,7 @@
   const coinHtml = n => `<span class="wallet"><i class="coin"></i>${n}</span>`;
   // button that shows a rewarded ad (or gives the reward at once with "no ads")
   const adBtn = (act, text, extra) =>
-    `<button class="btn ad${extra ? ' ' + extra : ''}" data-act="${act}">${save.noAds ? '🎁' : '▶'} ${text}${save.noAds ? '' : S.adSuffix}</button>`;
+    `<button class="btn ad${extra ? ' ' + extra : ''}" data-act="${act}">${save.noAds || !SDK.ysdk ? '🎁' : '▶'} ${text}${save.noAds || !SDK.ysdk ? '' : S.adSuffix}</button>`;   // 1.0.55: no ads outside Yandex
 
   function showMenu() {
     let lv = '';
@@ -8946,10 +8948,11 @@
     applyAudio();
   }
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { pauseGame(); persist(); }
+    if (document.hidden && state !== 'loading') { pauseGame(); persist(); }   // 1.0.55: never save before the old save is loaded
     applyAudio();
   });
   window.addEventListener('blur', () => { slideHeld = false; pauseGame(); });
+  window.addEventListener('pagehide', () => { if (state !== 'loading') persist(); });   // 1.0.55: iPhone apps closed by a swipe save too
 
   // =====================================================================
   //  Main loop & boot
