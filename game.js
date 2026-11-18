@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.61';
+  const VERSION = '1.0.62';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -6600,7 +6600,7 @@
     g.save(); g.translate(x, y); g.rotate(tilt); g.translate(-x, -y);
     const tw = (t + sd * 3) % 5.3, ew = run ? Math.sin(t * 9) * 0.05 : tw < 0.3 ? Math.sin(tw * 30) * 0.22 : 0;   // an ear twitch now and then
     const ear = (ex, back) => {
-      g.save(); g.translate(x + ex, y - r * 0.5); g.rotate(back ? -0.3 : 0.1 + ew);
+      g.save(); g.translate(x + ex, y - r * 0.55); g.rotate(back ? -0.3 : 0.22 + ew);
       const h = (o.earH || 7.2) * (r / 6.4), bw = 3.5 * (r / 6.4);
       g.fillStyle = vGrad(g, -h, 1, shade(col, back ? 0.8 : 1.1), shade(col, back ? 0.62 : 0.85));
       g.beginPath(); g.moveTo(-bw, 1.4); g.quadraticCurveTo(-bw * 0.55, -h * 0.6, 0.2, -h); g.quadraticCurveTo(bw * 0.75, -h * 0.55, bw, 1.6); g.closePath(); g.fill();
@@ -6611,7 +6611,7 @@
       }
       g.restore();
     };
-    if (!o.noEars) ear(-r * 0.52, 1);
+    if (!o.noEars) { ear(-r * 0.5, 1); ear(r * 0.32, 0); }   // 1.0.62: both ears behind the head — they never cover the face
     const ck = o.cheeks || col;
     const tuft = (a, len, wid) => {   // a pointed tuft of fur sticking out of the head outline at angle a
       const ex = x + Math.cos(a) * r * 0.9, ey = y + Math.sin(a) * r * 0.8;
@@ -6646,7 +6646,6 @@
     g.globalAlpha *= 0.75;
     for (const [dy, l] of [[-0.05, 1.1], [0.1, 1.2], [0.25, 1.0]]) line(g, [x + r * 1.0, y + r * (0.42 + dy * 0.5), x + r * (1.0 + l), y + r * (0.3 + dy * 1.6)], o.whisk || '#f5f5f5', r * 0.05);
     g.globalAlpha /= 0.75;
-    if (!o.noEars) ear(r * 0.18, 0);
     g.restore();
   }
   // a dog ear: 'up' (pointy, upright) or 'fold' (a triangle flap folding forward); flops as the dog runs
