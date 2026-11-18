@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.63';
+  const VERSION = '1.0.64';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
