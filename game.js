@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.65';
+  const VERSION = '1.0.66';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -1481,10 +1481,12 @@
   let W = 0, H = 0, DPR = 1, scale = 1, viewW = 560, viewH = 360, groundY = 290, px = 140;
 
   function resize() {
+    // 1.0.66: the canvas fills the screen through CSS (100% x 100%); its real, often fractional size on phones is measured
+    // here, so no strip of the page background is left along the right and bottom edges
     DPR = Math.min(window.devicePixelRatio || 1, 2);
-    W = Math.max(1, window.innerWidth || 1); H = Math.max(1, window.innerHeight || 1);
-    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
-    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    const box = canvas.getBoundingClientRect();
+    W = Math.max(1, box.width || window.innerWidth || 1); H = Math.max(1, box.height || window.innerHeight || 1);
+    canvas.width = Math.ceil(W * DPR); canvas.height = Math.ceil(H * DPR);
     scale = Math.min(W / 440, H / 360);
     viewW = W / scale; viewH = H / scale;
     groundY = viewH / 2 + 110;
@@ -1492,6 +1494,9 @@
   }
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+  document.addEventListener('fullscreenchange', () => setTimeout(resize, 50));
+  if (window.visualViewport) visualViewport.addEventListener('resize', resize);   // the address bar hides / shows
+  if (window.ResizeObserver) new ResizeObserver(() => { const b = canvas.getBoundingClientRect(); if (Math.abs(b.width - W) > 0.5 || Math.abs(b.height - H) > 0.5) resize(); }).observe(canvas);
 
   // =====================================================================
   //  Audio (WebAudio, no files). Muted when tab hidden / ad shown / paused by platform.
