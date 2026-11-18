@@ -39,15 +39,17 @@
   .devline { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 0; color: #1d1d26; font-size: 12px; opacity: .8; }
   .devline b { font-weight: 800; letter-spacing: .5px; }
   #ui {
-    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center; will-change: opacity;
     background: rgba(10, 16, 40, .45); padding: 16px; box-sizing: border-box;
   }
   #ui.show { display: flex; }
   .panel {
-    background: rgba(255,255,255,.96); color: #1d1d26; border-radius: 20px;
+    background: #fff; color: #1d1d26; border-radius: 20px;
     padding: clamp(16px, 4vmin, 28px); width: min(440px, 100%); max-height: 100%;
     overflow-y: auto; box-sizing: border-box; text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    /* 1.0.67: opaque and on its own layer — phones no longer repaint the whole menu every frame of the world behind it */
+    transform: translateZ(0); will-change: transform; contain: paint; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   }
   .panel h1 { margin: 0 0 6px; font-size: clamp(26px, 6vmin, 38px); }
   .panel h2 { margin: 0 0 8px; font-size: clamp(22px, 5vmin, 30px); }

@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.66';
+  const VERSION = '1.0.67';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -9370,8 +9370,12 @@
       const n = Math.ceil(dt * ts / (1 / 120));
       for (let i = 0; i < n; i++) step(dt * ts / n);
     }
+    // 1.0.67: while a menu window covers the screen, the world behind it is redrawn at 30 fps (it is dimmed and half hidden),
+    // which halves the work on phones; the run itself always draws every frame
+    if (uiEl.classList.contains('show') && state !== 'play' && (++frameNo & 1)) return;
     draw();
   }
+  const uiEl = document.getElementById('ui'); let frameNo = 0;
 
   // Loading never throws anything away: every field of the old save is kept (even ones this
   // version doesn't know about), new fields get defaults, and only broken values are fixed.
