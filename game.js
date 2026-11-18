@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.62';
+  const VERSION = '1.0.63';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -256,7 +256,7 @@
         'Почти финиш!',
         'Последний уровень — космос!'
       ],
-      world: 'Мир', worlds: ['Луга', 'Испытания', 'Мастер', 'Сакура', 'Подводный мир', 'Египет', 'Дикий Запад', 'Конфетная страна', 'Вулкан', 'Неоновый город'],
+      developer: 'Разработчик', world: 'Мир', worlds: ['Луга', 'Испытания', 'Мастер', 'Сакура', 'Подводный мир', 'Египет', 'Дикий Запад', 'Конфетная страна', 'Вулкан', 'Неоновый город'],
       endlessOpen: 'Открыт бесконечный забег! Он в меню, а дальше ждут уровни 6–15.'
     },
     en: {
@@ -497,7 +497,7 @@
         'Almost there!',
         'The last level — space!'
       ],
-      world: 'World', worlds: ['Meadows', 'Trials', 'Master', 'Sakura', 'Underwater', 'Egypt', 'Wild West', 'Candy Land', 'Volcano', 'Neon City'],
+      developer: 'Developer', world: 'World', worlds: ['Meadows', 'Trials', 'Master', 'Sakura', 'Underwater', 'Egypt', 'Wild West', 'Candy Land', 'Volcano', 'Neon City'],
       endlessOpen: 'Endless run unlocked! It is in the menu, and levels 6–15 are next.'
     }
   };
@@ -8013,7 +8013,7 @@
         ${canShortcut && !save.shortcut ? `<button class="mini hot" data-act="shortcut">${S.shortcutBtn}</button>` : ''}
       </div>
       <p class="small">${S.total}: ${totalStars}/${LEVELS.length * 5}${save.bestEndless ? ` · ${S.record}: ${save.bestEndless} ${S.m}` : ''}</p>
-      <p class="devline"><svg class="crlogo" aria-label="CR4YNE"><use href="#crlogo"/></svg><span>v${VERSION}</span></p>`, 'menu');   // 1.0.61: the developer under the menu
+      <p class="devline">${S.developer}: <b>CR4YNE</b> · v${VERSION}</p>`, 'menu');   // 1.0.63: the developer's name under the menu
   }
 
   // before every endless run: buy a magnet, see the second life
@@ -9486,7 +9486,10 @@
     await SDK.initPayments();
     dayTick();   // 1.0.49: daily ranking rewards / the coins-today counter
     updateSoundBtn();
-    document.getElementById('loading').remove();
+    { // 1.0.63: the developer logo and the loading line stay at least 1.5 s from the page start, then fade out
+      const ld = document.getElementById('loading'), wait = Math.max(0, 1500 - performance.now());
+      setTimeout(() => { ld.classList.add('out'); setTimeout(() => ld.remove(), 350); }, wait);
+    }
     goMenu();
     if (dailyAvail()) showDaily();
     SDK.canShortcut().then(v => { canShortcut = v; if (screen === 'menu') showMenu(); });

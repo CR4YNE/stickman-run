@@ -31,11 +31,12 @@
   }
   #loading .crlogo { width: min(64vw, 380px); height: auto; aspect-ratio: 230 / 56; filter: drop-shadow(0 4px 14px rgba(255,90,60,.35)); animation: crIn .9s ease-out both; }
   .ldbar { width: min(40vw, 220px); height: 6px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; }
-  .ldbar i { display: block; width: 40%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffd23f, #ff7a2f, #e5265f); animation: ldMove 1.1s ease-in-out infinite; }
-  @keyframes ldMove { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  .ldbar i { display: block; width: 100%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffd23f, #ff7a2f, #e5265f); transform-origin: left; animation: ldFill 1.5s cubic-bezier(.3,.6,.4,1) both; }
+  @keyframes ldFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }   /* 1.0.63: fills in the 1.5 s the logo is shown */
+  #loading { transition: opacity .35s ease; z-index: 100; } #loading.out { opacity: 0; pointer-events: none; }
   @keyframes crIn { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
   .devline { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 0; color: #1d1d26; font-size: 12px; opacity: .8; }
-  .devline .crlogo { width: 92px; height: auto; aspect-ratio: 230 / 56; }
+  .devline b { font-weight: 800; letter-spacing: .5px; }
   #ui {
     position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
     background: rgba(10, 16, 40, .45); padding: 16px; box-sizing: border-box;
