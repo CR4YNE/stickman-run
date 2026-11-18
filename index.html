@@ -214,6 +214,9 @@
     display: flex; align-items: center; justify-content: center; padding: 0;
   }
   #hud button.hidden { display: none; }
+  /* 1.0.76: the magnet button (one press = one magnet for 60 s) with how many are left */
+  #hud #bMagnet { width: auto; min-width: 46px; padding: 0 8px; gap: 3px; font-size: 20px; }
+  #hud #bMagnet b { font-size: 15px; }
 </style>
 </head>
 <body>
@@ -226,6 +229,7 @@
 <div id="toast"></div>
 <div id="hud">
   <button id="bSound" aria-label="sound"></button>
+  <button id="bMagnet" aria-label="magnet" class="hidden">🧲<b>0</b></button>
   <button id="bPause" aria-label="pause" class="hidden"><i class="pz"></i><i class="pz"></i></button>
 </div>
 <!-- Yandex Games SDK (served by the platform) -->

@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.75';
+  const VERSION = '1.0.76';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -48,7 +48,8 @@
       equip: 'Надеть', equipped: 'Надето', take: 'Снять', bought: 'Куплено', inStock: 'В запасе',
       lifeDesc: '❤ Вторая жизнь — в разделе «Премиум».',
       magnetDesc: '🧲 Магнит — 30 секунд монеты сами летят к тебе. На один забег.',
-      run: 'Бежать!', magnetOn: '✓ Магнит на 30 с включён', buyMagnet: 'Купить магнит на 30 с',
+      run: 'Бежать!', magnetOn: '🧲 Магнитов: {n} — жми кнопку 🧲 в забеге (или M): 60 с', buyMagnet: 'Купить магнит на 60 с',
+      rocketOn: '🚀 Стартовый рывок: первые 1000 м на ракете (осталось {n})', buyRocket: 'Купить стартовый рывок', rocketGo: '🚀 Рывок! 1000 м на ракете', rocketEnd: 'Приземление!',
       lifeHave: '❤ Вторая жизнь с тобой', lifeNo: '❤ Вторая жизнь — в «Премиум»',
       secondLife: 'Вторая жизнь!', magnetGot: 'Магнит!',
       values: 'Серебро = 1, золото = 5, кристалл = 25',
@@ -58,7 +59,7 @@
         cap: 'Кепка', fedora: 'Шляпа', cowboy: 'Ковбойская шляпа', tophat: 'Цилиндр',
         jeans: 'Джинсовые', sport: 'Спортивные', stripes: 'Полосатые',
         sneakers: 'Красные кеды', runners: 'Кроссовки', boots: 'Ботинки',
-        life: 'Вторая жизнь', magnet: 'Магнит (1 забег)',
+        life: 'Вторая жизнь', magnet: 'Магнит (60 с)', rocket: 'Стартовый рывок',
         gloves: 'Перчатки', glasses: 'Очки', mask: 'Маска героя', backpack: 'Рюкзак', cape: 'Плащ',
         bubbles: 'Пузыри', sparks: 'Искры', fire: 'Огонь', rainbow: 'Радуга',
         cloud: 'Облачко', stars: 'Звёздочки', notes: 'Ноты',
@@ -290,7 +291,8 @@
       equip: 'Wear', equipped: 'Worn', take: 'Take off', bought: 'Owned', inStock: 'In stock',
       lifeDesc: '❤ Second life — in the Premium tab.',
       magnetDesc: '🧲 Magnet — coins fly to you for 30 seconds. One run.',
-      run: 'Run!', magnetOn: '✓ 30 s magnet is on', buyMagnet: 'Buy a 30 s magnet',
+      run: 'Run!', magnetOn: '🧲 Magnets: {n} — press the 🧲 button in the run (or M): 60 s', buyMagnet: 'Buy a 60 s magnet',
+      rocketOn: '🚀 Head start: a rocket carries you the first 1000 m ({n} left)', buyRocket: 'Buy a head start', rocketGo: '🚀 Head start! 1000 m by rocket', rocketEnd: 'Touchdown!',
       lifeHave: '❤ Second life is with you', lifeNo: '❤ Second life — in Premium',
       secondLife: 'Second life!', magnetGot: 'Magnet!',
       values: 'Silver = 1, gold = 5, crystal = 25',
@@ -300,7 +302,7 @@
         cap: 'Cap', fedora: 'Hat', cowboy: 'Cowboy hat', tophat: 'Top hat',
         jeans: 'Denim', sport: 'Sport', stripes: 'Striped',
         sneakers: 'Red sneakers', runners: 'Running shoes', boots: 'Boots',
-        life: 'Second life', magnet: 'Magnet (1 run)',
+        life: 'Second life', magnet: 'Magnet (60 s)', rocket: 'Head start',
         gloves: 'Gloves', glasses: 'Glasses', mask: 'Hero mask', backpack: 'Backpack', cape: 'Cape',
         bubbles: 'Bubbles', sparks: 'Sparks', fire: 'Fire', rainbow: 'Rainbow',
         cloud: 'Cloud', stars: 'Stars', notes: 'Notes',
@@ -819,7 +821,7 @@
   const coinItems = cat => SHOP[cat].filter(it => it.price > 0);
   const ownedIn = cat => coinItems(cat).filter(it => save.owned.includes(it.id)).length;
   // 1.0.42: the second life moved to the premium shop (140 yan); whoever bought it for coins keeps it
-  const BOOSTS = [{ id: 'magnet', price: 25 }];
+  const BOOSTS = [{ id: 'magnet', price: 50 }, { id: 'rocket', price: 100 }];   // 1.0.76: magnet 50, head start 100
   const CATS = ['color', 'hat', 'shorts', 'shoes', 'acc', 'trail', 'jump', 'pet', 'emote', 'theme'];
   for (const cat of CATS) {
     ACH.push([`cat3_${cat}`, 3, achR(15), () => ownedIn(cat), 'cat3', cat]);
@@ -859,7 +861,7 @@
   // premium characters taken off sale: owners keep them, nobody else sees them
   const RETIRED = PRODUCTS.filter(pr => pr.legacy && pr.cat === 'color').map(pr => pr.item);
   const STARTER = { coins: 1500, magnets: 5, instead: 350 };   // 1.0.48: 1500 coins (was 700)
-  const MAGNET_PRICE = 25;
+  const MAGNET_PRICE = 50, ROCKET_PRICE = 100, ROCKET_DIST = 10000;   // 1.0.76; 10000 = 1000 m
 
   // Endless-run worlds bought in the shop ('auto' cycles day → night)
   const THEMES = {
@@ -1055,7 +1057,7 @@
   const PEAK = JUMP_V * JUMP_V / (2 * G);   // ~111
   const AIR = 2 * JUMP_V / G;               // ~0.64 s
   const SLIDE_MAX = 1.5;                    // a slide never lasts longer than this, even if ↓ is held
-  const MAGNET_TRACK = 15, MAGNET_SHOP = 30; // seconds
+  const MAGNET_TRACK = 15, MAGNET_SHOP = 60; // seconds
 
   const LEVELS = [
     { speed: 260, len: 7000, types: ['spike', 'spike', 'spike', 'coinrow'],
@@ -1437,7 +1439,7 @@
     unlocked: 0, stars: LEVELS.map(() => 0), done: LEVELS.map(() => 0), best: LEVELS.map(() => 0), sound: true,
     wallet: 0, bestEndless: 0, owned: ['classic', 'auto'],
     look: newLook(),
-    life: false, magnets: 0, seen: {}, stats: newStats(),
+    life: false, magnets: 0, rockets: 0, seen: {}, stats: newStats(),
     wOpen: {}, easyFails: 0, xp: 0, lvl: 1, title: '', titles: {},
     daily: { last: 0, count: 0, doubled: 0 }, tasks: { day: 0, list: [] }, dailyBest: { day: 0, m: 0 }, ach: {},
     noAds: false, magnetPerm: false, starterPerm: false, unlockAll: false, freeChestAt: 0, wheel: { day: 0, spins: 0 }, reviewAsked: false, shortcut: false, starterDay: 0,
@@ -1727,6 +1729,8 @@
     SDK.gameplay(s === 'play');
     if (s === 'play' || s === 'dying' || s === 'winning') SDK.banner(false);
     bPause.classList.toggle('hidden', s !== 'play');
+    if (s !== 'play' && s !== 'paused') rocketTo = 0;
+    updateMagBtn();
     bSlide.classList.toggle('hidden', !(IS_TOUCH && s === 'play'));
     bJump.classList.toggle('hidden', !(IS_TOUCH && s === 'play'));
     if (s !== 'play') slideHeld = false;
@@ -1754,12 +1758,27 @@
     save.stats.runs++;
     if (i === ENDLESS) {
       save.stats.endlessRuns++;
-      if (!save.magnetPerm && save.magnets > 0) { save.magnets--; player.magnet = MAGNET_SHOP; }
+      // 1.0.76: magnets are no longer spent at the start — the magnet button turns one on during the run
+      if (save.rockets > 0) { save.rockets--; rocketTo = dist + ROCKET_DIST; showTip(S.rocketGo, 2.2); sfx.magnet(); }
       if (!dailyRun && save.easyFails >= 3) { LV.easy = 5000; save.easyFails = 0; showTip(S.easyTip, 3); }
       extendEndless();
     }
     hideUI();
     setState('play');
+  }
+
+  // 1.0.76: the magnet button — any number of times per run, each press spends one magnet for 60 s
+  let rocketTo = 0;   // the head start: a rocket carries the stickman until dist reaches this
+  const rocketOn = () => state === 'play' && rocketTo > dist;
+  function useMagnet() {
+    if (state !== 'play' || save.magnetPerm || save.magnets <= 0) return;
+    save.magnets--; player.magnet = Math.max(0, player.magnet) + MAGNET_SHOP;
+    sfx.magnet(); showTip('🧲 +' + MAGNET_SHOP, 1); updateMagBtn();
+  }
+  function updateMagBtn() {
+    const show = state === 'play' && !save.magnetPerm && save.magnets > 0;
+    bMagnet.classList.toggle('hidden', !show);
+    if (show) bMagnet.querySelector('b').textContent = save.magnets;
   }
 
   let trialName = null;
@@ -1805,6 +1824,7 @@
   function die(cause) {
     if (state !== 'play') return;
     if (devGod && devMode) { rescue(); return; }   // developer test: can't die
+    if (rocketOn()) return;   // nothing touches the head-start rocket
     const zb = evNow();
     if (zb && zb.id === 'balloon' && !zb.popped && cause !== 'pit') {   // the balloon pops instead of you
       zb.popped = true; zb.x1 = dist; rescue(); sfx.die(); showTip(S.balloonPop, 1.2);
@@ -1935,6 +1955,14 @@
   function physics(dt) {
     const p = player, wx = dist;
     p.buffer -= dt; p.coyote -= dt; p.inv -= dt;
+    if (rocketTo && state === 'play') {   // 1.0.76: the head start — fly high, touch nothing
+      if (rocketOn()) {
+        p.slide = 0; p.vy = 0; p.ground = false; p.jumps = 1; p.y += (130 - p.y) * Math.min(1, dt * 3);
+        if (Math.random() < dt * 40) particles.push({ k: 'c', x: wx - 14, y: p.y + 18, vx: -160, vy: -60, g: 0, life: 0.35, l0: 0.35, r: 3.5, col: Math.random() < 0.5 ? '#ffca28' : '#ff7043' });
+        return;
+      }
+      rocketTo = 0; p.inv = Math.max(p.inv, 1.8); showTip(S.rocketEnd, 1.2);   // lands safely: a short invulnerability
+    }
     const ev = state === 'play' ? evId() : '';
     if (ev === 'jet') {   // hold = thrust up, release = glide down
       p.slide = 0;
@@ -2048,6 +2076,7 @@
       p.magnet -= dt;
       for (const c of LV.coins) if (!c.got && c.x - wx < 190 && c.x - wx > -60) c.mag = true;
     }
+    if (rocketOn()) for (const c of LV.coins) if (!c.got && c.x - wx < 260 && c.x - wx > -60) c.mag = true;   // the rocket sweeps coins up
     for (const c of LV.coins) {
       if (c.got) continue;
       if (c.flee) {   // runs ahead and hops once the stickman gets close (for at most ~1.2 s)
@@ -2121,7 +2150,7 @@
       }
     }
     if (petGrab) { petGrab.t -= dt; if (petGrab.t <= 0) petGrab = null; }
-    if (p.inv > 0) return;
+    if (p.inv > 0 || rocketOn()) return;
     const l = wx - PW / 2 + 3, r = wx + PW / 2 - 3, b = p.y, t = p.y + hh * (giantNow ? 1.8 : 1) - 4;
     for (const o of LV.obs) {
       if (o.x > r + 5) continue;
@@ -2178,7 +2207,7 @@
     if (tipTimer > 0 && state === 'play') tipTimer -= dt;
 
     if (state === 'menu' || state === 'play' || state === 'winning') {
-      let v = state === 'menu' ? 150 : baseSpeed() * slow;
+      let v = state === 'menu' ? 150 : baseSpeed() * slow * (rocketOn() ? 2.4 : 1);
       // after the finish line the stickman brakes and stops (then shows the emote, or just stands)
       if (state === 'winning') v *= Math.max(0, Math.min(1, (stateTimer - winHold) / 0.5));
       dist += v * dt;
@@ -4340,6 +4369,20 @@
     g.restore();
   }
 
+  // 1.0.76: the head-start icon — a red-and-white rocket flying up-right with a flame
+  function drawRocketIcon(g, x, y, s) {
+    g.save(); g.translate(x, y); g.scale(s, s); g.rotate(Math.PI / 4);
+    g.fillStyle = '#ffb300'; g.beginPath(); g.moveTo(-6, 16); g.quadraticCurveTo(0, 34, 6, 16); g.fill();
+    g.fillStyle = '#fff3b0'; g.beginPath(); g.moveTo(-3, 16); g.quadraticCurveTo(0, 26, 3, 16); g.fill();
+    g.fillStyle = '#e53935'; g.beginPath(); g.moveTo(-8, 8); g.lineTo(-15, 18); g.lineTo(-8, 16); g.fill(); g.beginPath(); g.moveTo(8, 8); g.lineTo(15, 18); g.lineTo(8, 16); g.fill();
+    const bg = g.createLinearGradient(-9, 0, 9, 0); bg.addColorStop(0, '#cfd8dc'); bg.addColorStop(0.45, '#ffffff'); bg.addColorStop(1, '#90a4ae');
+    g.fillStyle = bg; g.strokeStyle = '#37474f'; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(0, -24); g.bezierCurveTo(10, -14, 9, 6, 8, 17); g.lineTo(-8, 17); g.bezierCurveTo(-9, 6, -10, -14, 0, -24); g.fill(); g.stroke();
+    g.fillStyle = '#e53935'; g.beginPath(); g.moveTo(0, -24); g.bezierCurveTo(5, -19, 7, -14, 7.6, -11); g.lineTo(-7.6, -11); g.bezierCurveTo(-7, -14, -5, -19, 0, -24); g.fill();
+    g.fillStyle = '#4fc3f7'; g.strokeStyle = '#37474f'; g.beginPath(); g.arc(0, -2, 4, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.8)'; g.beginPath(); g.arc(-1.3, -3.3, 1.3, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
   function drawMagnetIcon(g, x, y, s) {
     g.save(); g.translate(x, y); g.scale(s, s);
     g.lineCap = 'butt'; g.strokeStyle = '#e53935'; g.lineWidth = 7;
@@ -8087,11 +8130,11 @@
         ctx.restore();
       } else if (mode) {
         if (ev === 'cart') drawMineCart(ctx, px, foot);
-        const m2 = ev === 'jet' && !player.ground ? 'jump' : (ev === 'cart' || ev === 'skate') && player.ground ? 'stand' : mode;
+        const m2 = (ev === 'jet' || rocketOn()) && !player.ground ? 'jump' : (ev === 'cart' || ev === 'skate') && player.ground ? 'stand' : mode;
         ctx.save();
         if (spinT > 0) { const a = (1 - spinT / 0.6) * Math.PI * 2; ctx.translate(px, foot - 28); ctx.rotate(-a); ctx.translate(-px, -(foot - 28)); }
         if (ev === 'skate') drawSkateboard(ctx, px, foot);   // the board turns with the trick
-        drawStick(ctx, px, foot - (ev === 'cart' ? 6 : ev === 'skate' ? 5 : 0), m2, player.anim, col, blink ? 0.3 : 1, ev === 'jet' ? Object.assign({}, LK, { acc: 'jetpack' }) : LK, outlineFor(c));
+        drawStick(ctx, px, foot - (ev === 'cart' ? 6 : ev === 'skate' ? 5 : 0), m2, player.anim, col, blink ? 0.3 : 1, ev === 'jet' || rocketOn() ? Object.assign({}, LK, { acc: 'jetpack' }) : LK, outlineFor(c));
         ctx.restore();
         if (ev === 'balloon') { const zb = evNow(); if (zb && !zb.popped) drawBalloon(ctx, px, foot); }
       }
@@ -8128,7 +8171,7 @@
   //  UI panels (DOM)
   // =====================================================================
   const ui = document.getElementById('ui'), panel = document.getElementById('panel');
-  const bPause = document.getElementById('bPause'), bSound = document.getElementById('bSound');
+  const bMagnet = document.getElementById('bMagnet'), bPause = document.getElementById('bPause'), bSound = document.getElementById('bSound');
   const bSlide = document.getElementById('bSlide'), bJump = document.getElementById('bJump');
 
   let devBtn = null, devEvBtn = null;
@@ -8222,9 +8265,10 @@
   function showPrerun(daily) {
     prerunDaily = !!daily;
     if (daily && save.dailyBest.day !== today()) save.dailyBest = { day: today(), m: 0 };
-    const mag = save.magnetPerm ? `<p class="boost on">🧲 ${S.magnetPermOn}</p>` : save.magnets > 0
-      ? `<p class="boost on">🧲 ${S.magnetOn}</p>`
-      : `<button class="btn boostbtn${save.wallet < 25 ? ' cant' : ''}" data-act="buyMagnet">🧲 ${S.buyMagnet} — <i class="coin"></i>25</button>`;
+    const mag = (save.magnetPerm ? `<p class="boost on">🧲 ${S.magnetPermOn}</p>` : save.magnets > 0 ? `<p class="boost on">${S.magnetOn.replace('{n}', save.magnets)}</p>` : '')
+      + (save.magnetPerm ? '' : `<button class="btn boostbtn${save.wallet < MAGNET_PRICE ? ' cant' : ''}" data-act="buyMagnet">🧲 ${S.buyMagnet} — <i class="coin"></i>${MAGNET_PRICE}</button>`)
+      + (save.rockets > 0 ? `<p class="boost on">${S.rocketOn.replace('{n}', save.rockets - 1)}</p>`
+        : `<button class="btn boostbtn${save.wallet < ROCKET_PRICE ? ' cant' : ''}" data-act="buyRocket">🚀 ${S.buyRocket} — <i class="coin"></i>${ROCKET_PRICE}</button>`);
     showPanel(`<div class="topline"><h2>${daily ? S.dailyRunShort : S.endlessShort}</h2>${coinHtml(save.wallet)}</div>
       ${daily ? `<p class="small">${S.dailyRunDesc}</p><p>${S.todayBest}: <b>${save.dailyBest.m} ${S.m}</b></p>`
               : `<p>${S.record}: <b>${save.bestEndless} ${S.m}</b></p>`}
@@ -8990,7 +9034,8 @@
       if (save.wallet < b.price) cls += ' cant';
     }
     if (b.id === 'magnet' && save.magnetPerm) { label = '∞'; cls = 'item worn'; }
-    const extra = b.id === 'magnet' ? `<span class="nm small">${save.magnetPerm ? S.prem.magnet_perm[0] : `${S.inStock}: ${save.magnets}`}</span>` : '';
+    const extra = b.id === 'magnet' ? `<span class="nm small">${save.magnetPerm ? S.prem.magnet_perm[0] : `${S.inStock}: ${save.magnets}`}</span>`
+      : b.id === 'rocket' ? `<span class="nm small">${S.inStock}: ${save.rockets}</span>` : '';
     return `<button class="${cls}" data-act="item" data-id="${b.id}">
       <canvas class="ic" data-id="${b.id}" width="128" height="144"></canvas>
       <span class="nm">${S.items[b.id]}</span>${extra}<span class="pr">${label}</span></button>`;
@@ -9057,6 +9102,7 @@
     thumbBg(g);
     if (cat === 'boost') {
       if (id === 'life') drawHeart(g, 32, 38, 3.2, '#ff4d6d');
+      else if (id === 'rocket') drawRocketIcon(g, 32, 36, 1);
       else drawMagnetIcon(g, 32, 34, 2.2);
       return;
     }
@@ -9368,6 +9414,7 @@
     if (cat === 'boost') {
       if (id === 'life') { if (save.life) return; if (!spend(4000)) return; save.life = true; }
       else if (id === 'magnet') { if (save.magnetPerm || !spend(MAGNET_PRICE)) return; save.magnets++; }
+      else if (id === 'rocket') { if (!spend(ROCKET_PRICE)) return; save.rockets++; }
     } else {
       const it = findItem(cat, id);
       if (!it) return;
@@ -9395,6 +9442,7 @@
     else if (act === 'endless') { if (allDone()) showPrerun(); }
     else if (act === 'run') startLevel(ENDLESS, prerunDaily);
     else if (act === 'buyMagnet') { if (!save.magnetPerm && spend(MAGNET_PRICE)) { save.magnets++; persist(); } showPrerun(prerunDaily); }
+    else if (act === 'buyRocket') { if (spend(ROCKET_PRICE)) { save.rockets++; persist(); } showPrerun(prerunDaily); }
     else if (act === 'drun') { if (allDone()) showPrerun(true); }
     else if (act === 'daily') showDaily();
     else if (act === 'claimDaily') claimDaily();
@@ -9486,6 +9534,8 @@
     ensureAudio();
   });
   bPause.addEventListener('click', e => { e.stopPropagation(); pauseGame(); });
+  for (const ev of ['pointerdown', 'touchstart', 'mousedown']) bMagnet.addEventListener(ev, e => e.stopPropagation());
+  bMagnet.addEventListener('click', e => { e.stopPropagation(); useMagnet(); });
 
   // =====================================================================
   //  Input
@@ -9537,6 +9587,7 @@
     } else if (k === 'ArrowDown' || k === 'KeyS') {
       e.preventDefault();
       if (state === 'play') slideHeld = true;
+    } else if (k === 'KeyM') { useMagnet();
     } else if (k === 'Escape' || k === 'KeyP') {
       if (state === 'play') pauseGame();
       else if (state === 'paused') resumeGame();
@@ -9622,6 +9673,7 @@
     save.best = arr(save.best, LEVELS.length);
     save.wallet = Math.max(0, save.wallet | 0);
     save.magnets = Math.max(0, save.magnets | 0);
+    save.rockets = Math.max(0, save.rockets | 0);
     for (const [k, v] of Object.entries(newStats())) if (typeof save.stats[k] !== typeof v) save.stats[k] = v;
     if (!Array.isArray(save.owned)) save.owned = [];
     save.owned = [...new Set(['classic', 'auto', ...save.owned.filter(x => typeof x === 'string')])];
