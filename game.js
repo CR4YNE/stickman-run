@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.73';
+  const VERSION = '1.0.74';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -140,7 +140,7 @@
         starter: ['Набор дня', 'Каждый день новый: {c} монет, {m} магнитов и {i}. Один раз в день.'],
         starter_perm: ['Набор дня навсегда', 'Купи один раз — и забирай «Набор дня» бесплатно каждый день.'],
         life: ['Вторая жизнь', 'Одно спасение от удара в каждом забеге. Навсегда.'],
-        unlock_all: ['Все скины и питомцы', 'Сразу открывает всех стикменов и всех питомцев — и из магазина за монеты, и премиум. Новые тоже будут твоими.'],
+        unlock_all: ['Все премиум скины и питомцы', 'Сразу открывает всех премиум-персонажей и премиум-питомцев. Новые премиум тоже будут твоими.'],
         magnet_perm: ['Постоянный магнит', 'Монеты сами летят к тебе всё время — в каждом забеге и на уровнях. Купленные магниты выкупаются за полную цену.'],
         coins_s: ['Горстка монет', '2 000 монет'], coins_m: ['Мешок монет', '6 000 монет'],
         coins_l: ['Сундук монет', '15 000 монет'], coins_xl: ['Гора монет', '40 000 монет'],
@@ -382,7 +382,7 @@
         starter: ['Pack of the day', 'New every day: {c} coins, {m} magnets and {i}. Once a day.'],
         starter_perm: ['Pack of the day forever', 'Buy once — and claim the Pack of the day for free every day.'],
         life: ['Second life', 'Survive one hit in every run. Forever.'],
-        unlock_all: ['All skins and pets', 'Unlocks every stickman and every pet at once — from the coin shop and premium. New ones will be yours too.'],
+        unlock_all: ['All premium skins and pets', 'Unlocks every premium character and premium pet at once. New premium ones will be yours too.'],
         magnet_perm: ['Permanent magnet', 'Coins fly to you all the time — in every run and on levels. Magnets you bought are bought back at full price.'],
         coins_s: ['Handful of coins', '2,000 coins'], coins_m: ['Bag of coins', '6,000 coins'],
         coins_l: ['Chest of coins', '15,000 coins'], coins_xl: ['Mountain of coins', '40,000 coins'],
@@ -837,7 +837,7 @@
     { id: 'starter_perm', yan: 25, sec: 'main' },
     { id: 'magnet_perm', yan: 50, sec: 'main' },
     { id: 'life', yan: 70, sec: 'main' },
-    { id: 'unlock_all', yan: 70, sec: 'main' },   // 1.0.73: every skin and pet, coin and premium
+    { id: 'unlock_all', yan: 70, sec: 'main' },   // 1.0.73: every premium skin and pet
     ...[[500, 3], [1000, 6], [2000, 11], [4000, 20], [10000, 48], [25000, 110]]   // 1.0.60 prices
       .map(([c, y]) => ({ id: 'coins_' + c, yan: y, coins: c, consumable: true, sec: 'coins' })),
     // 1.0.50: new premium characters; of the old ones only the robot, the vampire and the clown are still sold
@@ -8834,12 +8834,11 @@
     save.wallet += n; save.magnets = 0;
     setTimeout(() => toast(S.magnetsSold.replace('{n}', n)), 600);
   }
-  // 1.0.73: «Все скины и питомцы» — every skin and pet (coin shop + premium) is owned; also run on load,
+  // 1.0.73: «Все премиум скины и питомцы» — every premium (yan) skin and pet is owned; also run on load,
   // so skins and pets added in later versions arrive by themselves. They count as paid (survive a reset).
   function unlockEverything() {
     if (!save.unlockAll) return;
-    const ids = [...SHOP.color, ...SHOP.pet].map(it => it.id)
-      .concat(PRODUCTS.filter(pr => pr.item && !pr.legacy && (pr.cat === 'color' || pr.cat === 'pet')).map(pr => pr.item));
+    const ids = PRODUCTS.filter(pr => pr.item && !pr.legacy && (pr.cat === 'color' || pr.cat === 'pet')).map(pr => pr.item);   // 1.0.74: premium only
     for (const id of ids) {
       if (!save.owned.includes(id)) save.owned.push(id);
       if (!save.paid.includes(id)) save.paid.push(id);
