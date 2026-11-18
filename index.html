@@ -24,7 +24,11 @@
     -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
     touch-action: none; overscroll-behavior: none;
   }
-  #game { display: block; position: absolute; left: 0; top: 0; width: calc(100% + 2px); height: calc(100% + 2px); touch-action: none; }   /* 1.0.66: always the whole screen, 2 px extra so rounding on phones never leaves a strip */
+  /* 1.0.66/1.0.68: always the whole screen — pinned to the screen itself and as big as the page or the full screen, whichever is
+     larger (some phones report a page smaller than the screen in full screen or next to a camera cut-out), plus a few px to spare */
+  #game { display: block; position: fixed; left: 0; top: 0; touch-action: none;
+    width: calc(max(100%, 100vw) + 4px); height: calc(max(100%, 100vh) + 4px); }
+  @supports (height: 100lvh) { #game { width: calc(max(100%, 100lvw) + 4px); height: calc(max(100%, 100lvh) + 4px); } }
   #loading {
     position: absolute; inset: 0; display: flex; flex-direction: column; gap: 18px; align-items: center; justify-content: center;
     color: #fff; background: radial-gradient(circle at 50% 45%, #2b1d4f, #140c26);

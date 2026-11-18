@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.67';
+  const VERSION = '1.0.68';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -63,7 +63,7 @@
         bubbles: 'Пузыри', sparks: 'Искры', fire: 'Огонь', rainbow: 'Радуга',
         cloud: 'Облачко', stars: 'Звёздочки', notes: 'Ноты',
         bird: 'Птенчик', drone: 'Дрон', cat: 'Котик',
-        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня', d_lilu: 'Лилу', d_sonya: 'Соня', d_asya: 'Ася',
+        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня', d_lilu: 'Лилу', d_sonya: 'Соня', d_asya: 'Ася', d_dusha: 'Дюша',
         flag: 'Флаг', dance: 'Танец', flip: 'Сальто',
         auto: 'День и ночь', desert: 'Пустыня', winter: 'Зима', city: 'Город', space: 'Космос',
         hearts: 'Сердечки', beanie: 'Шапка с помпоном', confetti: 'Конфетти', scarf: 'Шарф', neon: 'Неоновый',
@@ -304,7 +304,7 @@
         bubbles: 'Bubbles', sparks: 'Sparks', fire: 'Fire', rainbow: 'Rainbow',
         cloud: 'Cloud', stars: 'Stars', notes: 'Notes',
         bird: 'Chick', drone: 'Drone', cat: 'Kitty',
-        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx', d_lilu: 'Lilu', d_sonya: 'Sonya', d_asya: 'Asya',
+        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx', d_lilu: 'Lilu', d_sonya: 'Sonya', d_asya: 'Asya', d_dusha: 'Dyusha',
         flag: 'Flag', dance: 'Dance', flip: 'Backflip',
         auto: 'Day & night', desert: 'Desert', winter: 'Winter', city: 'City', space: 'Space',
         hearts: 'Hearts', beanie: 'Bobble hat', confetti: 'Confetti', scarf: 'Scarf', neon: 'Neon',
@@ -709,7 +709,7 @@
       // 1.0.49: these three are sold for coins now
       { id: 'p_robopup', price: 2300 }, { id: 'p_jelly', price: 2100 }, { id: 'p_panda', price: 2400 },
       // pets of the developer and friends: own sub-section, always exactly 1200 (PRICE_SCALE doesn't apply)
-      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya', 'lilu', 'sonya', 'asya'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
+      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya', 'lilu', 'sonya', 'asya', 'dusha'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
       { id: 'lvl_star', price: 0, ex: 1 }
     ],
     emote: [
@@ -6699,9 +6699,10 @@
     } else line(g, [x + r * 0.55, y + r * 0.6, x + r * 0.85, y + r * 0.76, tip - r * 0.1, y + r * 0.6], 'rgba(40,20,20,0.6)', r * 0.08);
     line(g, [tip - r * 0.06, y + r * 0.4, tip - r * 0.12, y + r * 0.62], 'rgba(40,20,20,0.45)', r * 0.06);
     // a big glossy nose
-    const ng = g.createRadialGradient(tip - r * 0.12, y + r * 0.05, 0.1, tip, y + r * 0.15, r * 0.4); ng.addColorStop(0, '#5a5a5a'); ng.addColorStop(1, '#0d0d0d');
+    const ng = g.createRadialGradient(tip - r * 0.12, y + r * 0.05, 0.1, tip, y + r * 0.15, r * 0.4); ng.addColorStop(0, o.noseHi || '#5a5a5a'); ng.addColorStop(1, o.nose || '#0d0d0d');
     pE(g, tip, y + r * 0.16, r * 0.32, r * 0.24, 0.1, ng);
     pE(g, tip - r * 0.12, y + r * 0.07, r * 0.12, r * 0.07, -0.2, 'rgba(255,255,255,0.75)');
+    if (o.after) o.after(g, x, y, r, tip);   // 1.0.68: beards / moustaches over the muzzle
     // eyes, brows, blush
     const er = o.eyeR || r * 0.35;
     blush(g, x - r * 0.05, y + r * 0.45, r * 0.42, o.blush);
@@ -6835,7 +6836,7 @@
 
   // pet sub-section of the coin shop: pets of the developer and friends (fixed price, owner on the card)
   const PET_OWNER = { d_bonya: 'CR4YNE', d_dixon: 'xxennekk', d_kurt: { ru: 'семья Zeit', en: 'the Zeit family' },
-    d_lilu: { ru: 'семья CR4YNE', en: 'the CR4YNE family' }, d_sonya: 'Насики', d_asya: 'Насики',
+    d_lilu: { ru: 'семья CR4YNE', en: 'the CR4YNE family' }, d_sonya: 'Насики', d_asya: 'Насики', d_dusha: 'Pilulin',
     d_yosya: 'EZOKEYNE (Onitham)', d_onya: { ru: 'xxennekk и Leska', en: 'xxennekk & Leska' } };
   const petOwner = id => { const o = PET_OWNER[id]; return !o ? '' : typeof o === 'string' ? o : (S === TEXT.ru ? o.ru : o.en); };
 
@@ -7150,6 +7151,51 @@
       bowTie(g, hx - 1.1, hy - 5.4, 1.05, '#ff8fb8', '#ffffff');   // 1.0.60: a pink bow between the ears
       g.restore();
       petHead = [hx, hy + hop];
+    } else if (id === 'd_dusha') {   // Дюша (Pilulin) — 1.0.68: a chocolate Yorkshire terrier: a long silky dark-chocolate coat that
+      // sways, golden-tan face, legs and chest, a long tan moustache and beard, a fringe falling over the eyes, upright ears
+      // with long fringes, a liver-brown nose, a fluffy tail held up; a mint collar with a round tag
+      quad(g, t * 1.05, still, { L: 7.6, w: 2.7, rx: 10.4, ry: 6, col: '#4a2f22', legCol: '#b27a46', paw: '#c99258', f: 13.5, bounce: 1.9, sheen: 0.18,
+        under: (g, by, ph) => {   // the long silky coat hanging below the body, swaying with the steps
+          const sw = still ? 0 : Math.sin(ph) * 0.6;
+          g.fillStyle = vGrad(g, by, by + 8, '#4a2f22', '#2e1c13');
+          g.beginPath(); g.moveTo(-10.5, by);
+          for (let k = 0; k <= 10; k++) { const xx = -10 + k * 2.05, yy = by + 6.2 + (k % 2 ? 1.6 : 0) + Math.sin(k * 1.7 + (ph || 0)) * 0.4; g.lineTo(xx + sw * (k / 10), yy); }
+          g.lineTo(10.5, by); g.closePath(); g.fill();
+        },
+        marks: (g, by) => {
+          g.save(); g.beginPath(); g.ellipse(0, by, 10.4, 6, 0, 0, Math.PI * 2); g.clip();
+          g.globalAlpha *= 0.5; for (let k = -9; k < 9; k += 1.6) line(g, [k, by - 5.6, k - 1.2, by - 1.5, k - 0.6, by + 2.5], k % 3.2 < 1.6 ? '#6b4632' : '#2e1c13', 0.55); g.globalAlpha /= 0.5;   // silky strands
+          const tg = g.createRadialGradient(8, by + 2.5, 0.5, 7, by + 2, 5); tg.addColorStop(0, '#c99258'); tg.addColorStop(1, 'rgba(178,122,70,0)');
+          g.fillStyle = tg; g.fillRect(2, by - 3, 10, 10); g.restore();   // the tan chest
+        },
+        ruff: '#8a5a36',
+        collar: { col: '#3fd0b6', tag: 'round' },
+        tail: (g, tx, ty, s, run) => { const q = tailChain(g, tx, ty, t, run, { n: 4, len: 8, w0: 3.2, w1: 2.6, a: -1.7, curl: 0.18, root: 0.4, amp: 0.12, lag: 0.35, fq: 11, col: '#3e271c', r: { fq: 16 } });
+          for (let k = 1; k <= 4; k++) fluff(g, q[k][0], q[k][1], 2.4 - k * 0.15, 2.2 - k * 0.15, 6, 0.35, k % 2 ? '#4a2f22' : '#36231a', t * 2); },   // a fluffy plume held up, wagging
+        head: (g, hx, hy, t, run) => cuteDogHead(g, hx, hy, t, run, { col: '#5a3a28', r: 6, snout: '#c99258', short: 1, iris: '#3a2012', blush: 0.3, seed: 2.6,
+          nose: '#5e3428', noseHi: '#b07a68', fluffHead: '#3e271c',
+          patch: (g, x, y, r) => {   // the golden-tan face below a dark crown
+            const fg = g.createRadialGradient(x + r * 0.5, y + r * 0.45, 0.5, x + r * 0.3, y + r * 0.3, r * 1.1); fg.addColorStop(0, '#d9a066'); fg.addColorStop(0.6, '#b27a46'); fg.addColorStop(1, 'rgba(120,80,50,0)');
+            g.fillStyle = fg; g.fillRect(x - r, y - r * 0.3, r * 2.2, r * 1.4);
+            g.globalAlpha *= 0.6; for (let k = 0; k < 6; k++) line(g, [x - r * 0.7 + k * r * 0.28, y - r * 0.95, x - r * 0.6 + k * r * 0.3, y - r * 0.35], k % 2 ? '#7a5034' : '#2e1c13', r * 0.08); g.globalAlpha /= 0.6;   // strands on the crown
+          },
+          after: (g, x, y, r, tip) => {   // the long silky moustache and beard: soft tapered locks flowing down and back
+            const sw = run ? Math.sin(t * 26) * 0.5 : Math.sin(t * 1.4) * 0.18;
+            const lock = (x0, y0, x1, y1, w, c1, c2) => {   // one tapered lock from (x0, y0) to its tip (x1, y1)
+              g.fillStyle = vGrad(g, y0, y1, c1, c2); g.beginPath(); g.moveTo(x0 - w, y0);
+              g.quadraticCurveTo(x0 - w * 0.6, (y0 + y1) / 2, x1, y1); g.quadraticCurveTo(x0 + w * 1.1, (y0 + y1) / 2 + w * 0.3, x0 + w, y0); g.closePath(); g.fill();
+            };
+            for (const [bx, len, back, w, k] of [[0.45, 0.95, 0.35, 0.32, 0.8], [0.75, 1.15, 0.3, 0.36, 1], [1.05, 1.1, 0.15, 0.34, 0.92], [1.3, 0.85, 0.05, 0.28, 0.85], [0.6, 1.25, 0.55, 0.3, 0.7]])
+              lock(x + r * bx, y + r * 0.5, x + r * (bx - back) + sw * k, y + r * (0.5 + len), r * w, shade('#d9a066', 0.9 + k * 0.15), shade('#a8703e', k));
+            const ng = g.createRadialGradient(tip - r * 0.12, y + r * 0.05, 0.1, tip, y + r * 0.15, r * 0.4); ng.addColorStop(0, '#b07a68'); ng.addColorStop(1, '#5e3428');
+            pE(g, tip, y + r * 0.16, r * 0.3, r * 0.22, 0.1, ng); pE(g, tip - r * 0.1, y + r * 0.08, r * 0.1, r * 0.06, -0.2, 'rgba(255,255,255,0.7)');   // the nose stays on top
+            // the fringe: soft locks from the crown falling forward to just above the eyes
+            const fs = run ? Math.sin(t * 13) * 0.25 : Math.sin(t * 1.1) * 0.1;
+            for (const [x0, x1, y1, w, c] of [[-0.45, 0.15, -0.42, 0.3, '#5a3a28'], [-0.15, 0.55, -0.48, 0.32, '#7a5034'], [0.2, 0.95, -0.45, 0.3, '#8a5a36'], [0.05, 0.35, -0.55, 0.26, '#a8703e']])
+              lock(x + r * x0, y - r * 0.92, x + r * x1 + fs, y + r * y1, r * w, '#3e271c', c);
+          },
+          earBack: (g, x, y, r) => dogEar(g, x - r * 0.6, y - r * 0.6, 'up', -0.35, '#4a2f22', '#b27a46', '#8a5a36', t, run, 0.95),
+          earFront: (g, x, y, r) => dogEar(g, x + r * 0.05, y - r * 0.75, 'up', 0.18, '#5a3a28', '#c99258', '#b27a46', t, run, 1) }) });
     } else if (id === 'd_lilu') {   // Лилу (семья CR4YNE) — 1.0.60 deluxe: a white puppy with ginger patches and freckles, a ginger head with a
       // white blaze, one ear up and one flopping, big eyes with lashes, pink cheeks, a pink collar with a heart tag
       quad(g, t, still, { L: 9, w: 2.6, rx: 10.5, ry: 5.7, col: '#f8f5f0', paw: '#f3eee6', legCol: '#f5f1eb', f: 13.5, bounce: 2, sheen: 0.28,
@@ -7847,7 +7893,18 @@
     }
   }
 
+  // 1.0.68: the page behind the canvas wears the current world's colours (sky on top, earth below), so if a phone ever leaves a
+  // strip uncovered at an edge it blends in instead of showing a blue line
+  let pageBgKey = '', bgTick = 0;
+  function pageBg() {
+    const p = palette(); if (!p || !p.sky) return;
+    const k = p.sky[0] + p.sky[1] + p.dirt;
+    if (k === pageBgKey) return; pageBgKey = k;
+    document.documentElement.style.background = `linear-gradient(${p.sky[0]}, ${p.sky[1]} 70%, ${p.dirt} 80%)`;
+    document.body.style.background = 'transparent';
+  }
   function draw() {
+    if ((bgTick++ & 15) === 0) pageBg();
     const c = palette();
     const sh = shakeT > 0 ? shakeT * 28 * DPR : 0;
     ctx.setTransform(DPR * scale, 0, 0, DPR * scale, (Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh);
