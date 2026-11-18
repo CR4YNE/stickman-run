@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.70';
+  const VERSION = '1.0.71';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -756,6 +756,14 @@
   const PRICE_SCALE = (COLLECTION_TARGET - fixedSum) / baseSum;
   for (const cat of Object.keys(SHOP)) for (const it of SHOP[cat])
     if (it.price > 0 && !it.fixed) it.price = Math.max(50, Math.round(it.price * PRICE_SCALE / 10) * 10);
+  // 1.0.71: everything except pets costs more, so the whole coin collection (pets included, shown items only) is ≈ 50 000;
+  // pet prices stay as they were. Adding items keeps the total: the scale is computed from the list.
+  const COLLECTION_TOTAL = 50000;
+  let petSum = 0, restSum = 0;
+  for (const cat of Object.keys(SHOP)) for (const it of SHOP[cat]) if (it.price > 0 && !it.hide) { if (cat === 'pet') petSum += it.price; else restSum += it.price; }
+  const REST_SCALE = (COLLECTION_TOTAL - petSum) / restSum;
+  for (const cat of Object.keys(SHOP)) if (cat !== 'pet') for (const it of SHOP[cat])
+    if (it.price > 0 && !it.fixed) it.price = Math.max(50, Math.round(it.price * REST_SCALE / 10) * 10);
   // 1.0.57: the daily login reward is one random premium skin or pet the player does not own yet (never a repeat);
   // the old 10-day list is gone (items already received stay). Once everything is owned, coins instead.
   const DAILY_ALL_COINS = 1000;
