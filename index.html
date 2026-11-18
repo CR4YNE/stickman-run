@@ -177,7 +177,15 @@
     border: 0; background: rgba(255,255,255,.8); color: #1d1d26; font-size: 34px; font-weight: 900;
     touch-action: none; box-shadow: 0 4px 12px rgba(0,0,0,.25);
   }
-  #bSlide.hidden { display: none; }
+  #bSlide.hidden, #bJump.hidden { display: none; }
+  /* 1.0.56: two big touch buttons вЂ” jump on the left, slide on the right (a tap on the screen still jumps too) */
+  #bJump {
+    position: absolute; left: 16px; bottom: 16px; width: 84px; height: 84px; border-radius: 50%;
+    border: 0; background: rgba(255,255,255,.8); color: #1d1d26; font-size: 34px; font-weight: 900;
+    touch-action: none; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  }
+  #bJump small, #bSlide small { display: block; font-size: 11px; font-weight: 800; margin-top: -4px; }
+  #bJump:active, #bSlide:active { transform: scale(.94); background: rgba(255,214,0,.9); }
   #hud { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
   #hud button {
     width: 46px; height: 46px; border-radius: 12px; border: 0; cursor: pointer;
@@ -191,7 +199,8 @@
 <canvas id="game"></canvas>
 <div id="loading">вЂ¦</div>
 <div id="ui"><div class="panel" id="panel"></div></div>
-<button id="bSlide" class="hidden" aria-label="slide">в–ј</button>
+<button id="bJump" class="hidden" aria-label="jump">в–І<small>РїСЂС‹Р¶РѕРє</small></button>
+<button id="bSlide" class="hidden" aria-label="slide">в–ј<small>РїРѕРґРєР°С‚</small></button>
 <div id="toast"></div>
 <div id="hud">
   <button id="bSound" aria-label="sound"></button>

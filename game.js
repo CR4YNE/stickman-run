@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.55';
+  const VERSION = '1.0.56';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -63,7 +63,7 @@
         bubbles: 'Пузыри', sparks: 'Искры', fire: 'Огонь', rainbow: 'Радуга',
         cloud: 'Облачко', stars: 'Звёздочки', notes: 'Ноты',
         bird: 'Птенчик', drone: 'Дрон', cat: 'Котик',
-        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня',
+        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня', d_lilu: 'Лилу', d_sonya: 'Соня', d_asya: 'Ася',
         flag: 'Флаг', dance: 'Танец', flip: 'Сальто',
         auto: 'День и ночь', desert: 'Пустыня', winter: 'Зима', city: 'Город', space: 'Космос',
         hearts: 'Сердечки', beanie: 'Шапка с помпоном', confetti: 'Конфетти', scarf: 'Шарф', neon: 'Неоновый',
@@ -303,7 +303,7 @@
         bubbles: 'Bubbles', sparks: 'Sparks', fire: 'Fire', rainbow: 'Rainbow',
         cloud: 'Cloud', stars: 'Stars', notes: 'Notes',
         bird: 'Chick', drone: 'Drone', cat: 'Kitty',
-        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx',
+        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx', d_lilu: 'Lilu', d_sonya: 'Sonya', d_asya: 'Asya',
         flag: 'Flag', dance: 'Dance', flip: 'Backflip',
         auto: 'Day & night', desert: 'Desert', winter: 'Winter', city: 'City', space: 'Space',
         hearts: 'Hearts', beanie: 'Bobble hat', confetti: 'Confetti', scarf: 'Scarf', neon: 'Neon',
@@ -707,7 +707,7 @@
       // 1.0.49: these three are sold for coins now
       { id: 'p_robopup', price: 2300 }, { id: 'p_jelly', price: 2100 }, { id: 'p_panda', price: 2400 },
       // pets of the developer and friends: own sub-section, always exactly 1200 (PRICE_SCALE doesn't apply)
-      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
+      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya', 'lilu', 'sonya', 'asya'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
       { id: 'lvl_star', price: 0, ex: 1 }
     ],
     emote: [
@@ -1656,6 +1656,7 @@
     if (s === 'play' || s === 'dying' || s === 'winning') SDK.banner(false);
     bPause.classList.toggle('hidden', s !== 'play');
     bSlide.classList.toggle('hidden', !(IS_TOUCH && s === 'play'));
+    bJump.classList.toggle('hidden', !(IS_TOUCH && s === 'play'));
     if (s !== 'play') slideHeld = false;
   }
 
@@ -4249,63 +4250,6 @@
     g.restore();
   }
 
-  // Боня — the developer's rabbit (owner CR4YNE). Pixel-art sprite (1 pixel = 1 world unit),
-  // faces right; (0,0) = ground under her. Two frames: sitting and mid-hop, plus blinking.
-  const BONYA_PAL = {
-    K: '#1b120d', D: '#2e1f18', N: '#3e2a20', H: '#4a3226', B: '#6e4630', R: '#b8642e', O: '#d1823f',
-    G: '#8a7e74', g: '#6b6058', W: '#f2ede8', P: '#e8a0a8', E: '#0d0907', S: '#ffffff'
-  };
-  const BONYA_BODY = [
-    '.................KK..KK.....',
-    '................KDRKKDRK....',
-    '................KDRKKDRK....',
-    '................KDRKKDRK....',
-    '......KKKKKKKKKKHHHHHHHK....',
-    '.....KNNNNNNNNNKHHHHHHHHK...',
-    '....KNNNNNNNNNNRHHHHESHHK...',
-    '...KBNNBBNNNGBBRRHHHEEHHDK..',
-    'NNKBBBRBBBBBBWBRRHHHHHHDDDK.',
-    'NBKBRRBBBGGBBWBRORHHHHDDDDP.',
-    '.KBRRRBBBGGBBBBROOHHHDDDDK..',
-    '.KBBRRBBBBBBBBBRROORHKKKK...',
-    '.KNBBBBRRBBGGBBBROOOK.......',
-    '.KBBBBRRRBBBGGBBBRRK........',
-    '.KBBRRBBBBBBBBBBBRRK........'
-  ];
-  const BONYA_LEGS_SIT = ['..KKDDKKKKKKKKKKDDKK........', '....DDK.........KDDK........'];
-  const BONYA_LEGS_HOP = ['..KKKKKKKKKKKKKKKKKK........', '..DDK..........KDDK.........'];
-
-  // each frame is rendered once into a tiny canvas, then drawn scaled with smoothing off:
-  // crisp square pixels, no seams between them
-  const bonyaCache = {};
-  function bonyaFrame(hop, blink) {
-    const key = (hop ? 'h' : 's') + (blink ? 'b' : '');
-    if (bonyaCache[key]) return bonyaCache[key];
-    const rows = [...BONYA_BODY, ...(hop ? BONYA_LEGS_HOP : BONYA_LEGS_SIT)];
-    const cv = document.createElement('canvas');
-    cv.width = rows[0].length; cv.height = rows.length;
-    const c = cv.getContext('2d');
-    rows.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '.') return;
-      if (blink && (ch === 'E' || ch === 'S')) ch = 'D';
-      c.fillStyle = BONYA_PAL[ch]; c.fillRect(x, y, 1, 1);
-    }));
-    return (bonyaCache[key] = cv);
-  }
-
-  function drawBonya(g, t) {
-    const p = (t * 1.6) % 1, hop = p < 0.4;                 // sits most of the time, then a hop
-    const lift = hop ? Math.round(Math.sin(p / 0.4 * Math.PI) * 5) : 0;
-    const blink = !hop && Math.sin(t * 1.7) > 0.97;
-    const img = bonyaFrame(hop, blink);
-    g.fillStyle = 'rgba(0,0,0,0.18)';                        // pixel shadow
-    g.fillRect(-11 + Math.floor(lift / 2), -1 + petLift, 20 - lift, 1);
-    const sm = g.imageSmoothingEnabled;
-    g.imageSmoothingEnabled = false;
-    g.drawImage(img, -14, -img.height - lift);
-    g.imageSmoothingEnabled = sm;
-  }
-
   function drawMagnetIcon(g, x, y, s) {
     g.save(); g.translate(x, y); g.scale(s, s);
     g.lineCap = 'butt'; g.strokeStyle = '#e53935'; g.lineWidth = 7;
@@ -6630,6 +6574,7 @@
 
   // pet sub-section of the coin shop: pets of the developer and friends (fixed price, owner on the card)
   const PET_OWNER = { d_bonya: 'CR4YNE', d_dixon: 'xxennekk', d_kurt: { ru: 'семья Zeit', en: 'the Zeit family' },
+    d_lilu: { ru: 'семья CR4YNE', en: 'the CR4YNE family' }, d_sonya: 'Насики', d_asya: 'Насики',
     d_yosya: 'EZOKEYNE (Onitham)', d_onya: { ru: 'xxennekk и Leska', en: 'xxennekk & Leska' } };
   const petOwner = id => { const o = PET_OWNER[id]; return !o ? '' : typeof o === 'string' ? o : (S === TEXT.ru ? o.ru : o.en); };
 
@@ -6847,8 +6792,126 @@
       g.fillStyle = '#ff7043'; g.beginPath(); g.moveTo(1.4, -21.6); g.lineTo(6.5, -20.6); g.lineTo(1.4, -19.6); g.fill();
       g.strokeStyle = '#37474f'; g.lineWidth = 0.7; g.beginPath(); g.arc(1.2, -19.6, 2.4, 0.25, Math.PI - 0.25); g.stroke();
       g.restore();
-    } else if (id === 'd_bonya') {
-      drawBonya(g, t);
+    } else if (id === 'd_bonya') {   // 1.0.56: Боня (CR4YNE) — a plump, long "sausage" rabbit: near-black head and short
+      // dwarf ears, dark chocolate back, a warm caramel-rust band round the neck and sides, a white fleck on the back
+      const P2 = 0.62, p2 = still ? 0.85 : (t % P2) / P2, air = !still && p2 < 0.42, k2 = air ? Math.sin(p2 / 0.42 * Math.PI) : 0;
+      const land = !still && p2 >= 0.42 && p2 < 0.55 ? 1 - (p2 - 0.42) / 0.13 : 0, hop = -k2 * 7;
+      petShadow(g, 15 - k2 * 3, 2.2, 0, `rgba(0,0,0,${0.18 - k2 * 0.06})`);
+      g.save(); g.translate(0, hop); g.rotate(air ? -0.12 * k2 : 0);
+      g.scale(1 + 0.1 * k2 + 0.08 * land, 1 - 0.06 * k2 - 0.1 * land);   // stretches in the air, squashes on landing
+      // hind foot (long and dark), then the body
+      if (air) { g.fillStyle = '#2a1d16'; g.beginPath(); g.ellipse(-14, -2.5, 6.5, 2, -0.35, 0, Math.PI * 2); g.fill(); }
+      else { g.fillStyle = '#2a1d16'; g.beginPath(); g.ellipse(-8, -1.6, 7, 2, 0, 0, Math.PI * 2); g.fill(); }
+      const bg = g.createLinearGradient(0, -17, 0, 0); bg.addColorStop(0, '#2a1e18'); bg.addColorStop(0.55, '#3b2a21'); bg.addColorStop(1, '#4e3424');
+      g.fillStyle = bg; g.beginPath();   // the long loaf: a round rump, a long back, the chest
+      g.moveTo(-17, -6); g.bezierCurveTo(-19, -15, -9, -18, 0, -16.5); g.bezierCurveTo(7, -15.5, 11, -14, 12, -9); g.bezierCurveTo(12.5, -4, 10, -1, 6, -0.8);
+      g.lineTo(-12, -0.8); g.bezierCurveTo(-16, -1, -17.5, -3, -17, -6); g.closePath(); g.fill();
+      g.save(); g.clip();
+      const rb = g.createRadialGradient(7, -6, 0.5, 6, -6, 7.5); rb.addColorStop(0, 'rgba(176,96,45,0.9)'); rb.addColorStop(1, 'rgba(150,80,40,0)');
+      g.fillStyle = rb; g.fillRect(-6, -18, 22, 18);                                            // the rust band at the neck and chest
+      const sb = g.createRadialGradient(-2, -3, 1, -2, -3, 10); sb.addColorStop(0, 'rgba(130,72,38,0.5)'); sb.addColorStop(1, 'rgba(130,72,38,0)');
+      g.fillStyle = sb; g.fillRect(-18, -14, 26, 14);                                           // warm sides
+      g.strokeStyle = 'rgba(20,12,8,0.35)'; g.lineWidth = 0.6;                                  // fur strokes along the back
+      for (let q = -15; q < 9; q += 2.4) { g.beginPath(); g.moveTo(q, -15 + Math.abs(q) * 0.05); g.lineTo(q - 1.4, -12.5); g.stroke(); }
+      g.fillStyle = 'rgba(255,255,255,0.13)'; g.beginPath(); g.ellipse(-4, -15, 9, 1.6, -0.05, 0, Math.PI * 2); g.fill();   // sheen on the back
+      g.restore();
+      pE(g, 2, -13.4, 0.6, 1.5, -0.3, 'rgba(236,230,224,0.75)');                                // the small white fleck
+      pE(g, -17.5, -9, 2.4, 2.2, 0, '#2e211a');                                                 // a tiny tail
+      // front paws
+      const fp = air ? 2 : 0; g.fillStyle = '#3a271d'; g.beginPath(); g.ellipse(8 + fp, -1.4, 2.6, 1.4, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(4 + fp, -1.2, 2.4, 1.3, 0, 0, Math.PI * 2); g.fill();
+      // the head: near-black, round cheeks, a soft nose
+      const hx = 13, hy = -11 + (still ? Math.sin(t * 1.4) * 0.3 : 0);
+      const ew = Math.sin(t * (still ? 1.6 : 7)) * 0.08;
+      for (const [ex, a, k] of [[-2.2, -0.55, 0.8], [0.4, -0.3, 1]]) {   // short dwarf ears with rounded tips
+        g.save(); g.translate(hx + ex, hy - 4.5); g.rotate(a + ew * k);
+        const eg = g.createLinearGradient(-2.6, 0, 2.6, 0); eg.addColorStop(0, shade('#3a2a22', k * 1.15)); eg.addColorStop(1, shade('#1f1612', k));
+        g.fillStyle = eg; g.beginPath(); g.moveTo(-2.4, 0); g.quadraticCurveTo(-3, -6.5, 0, -7.6); g.quadraticCurveTo(3, -6.5, 2.4, 0); g.closePath(); g.fill();
+        if (k === 1) { g.fillStyle = 'rgba(120,70,50,0.6)'; g.beginPath(); g.moveTo(-1, -0.6); g.quadraticCurveTo(-1.3, -5, 0, -6); g.quadraticCurveTo(1.2, -5, 1, -0.6); g.fill(); }
+        g.restore();
+      }
+      const hg = g.createRadialGradient(hx - 1.5, hy - 2.5, 0.8, hx, hy, 7.6); hg.addColorStop(0, '#4a3529'); hg.addColorStop(1, '#1d1410');
+      g.fillStyle = hg; g.beginPath(); g.ellipse(hx, hy, 7, 6.2, 0.1, 0, Math.PI * 2); g.fill();
+      pE(g, hx + 5.2, hy + 1.6, 3.4, 3, 0.1, '#2a1d17');                                        // muzzle
+      pE(g, hx + 2, hy + 2.6, 2.8, 2, 0, 'rgba(120,70,45,0.55)');                              // a cheek
+      pE(g, hx + 8, hy + 0.8, 0.9, 0.7, 0, '#b07a6a');                                          // the nose
+      line(g, [hx + 7.6, hy + 1.6, hx + 7.4, hy + 2.8, hx + 6.2, hy + 3.3], 'rgba(0,0,0,0.5)', 0.4);
+      pE(g, hx + 2.2, hy - 1.2, 2.6, 2.6, 0, 'rgba(110,60,40,0.65)');                           // the lighter ring round the eye
+      petEye(g, hx + 2.4, hy - 1.2, 1.9, t, '#3e2216', 'round', 0.7);
+      g.globalAlpha *= 0.55; for (const dy of [-0.6, 0.6]) line(g, [hx + 6.5, hy + 2, hx + 12, hy + 1.4 + dy * 2], '#d7ccc8', 0.35); g.globalAlpha /= 0.55;
+      g.restore();
+    } else if (id === 'd_lilu') {   // Лилу (CR4YNE family) — a white puppy with ginger patches, a white blaze, a big
+      // ginger head with dark-edged ears (one stands up, the other folds), a long white tail
+      quad(g, t, still, { L: 9, w: 2.6, rx: 10.5, ry: 5.6, col: '#f7f4ef', paw: '#f2ede4', legCol: '#f4f0ea', f: 13.5, bounce: 2,
+        marks: (g, by) => {
+          pE(g, -6.5, by - 3.4, 3.4, 2.2, 0.2, '#c98345'); pE(g, -8.2, by - 2.6, 1.6, 1.2, 0, '#7a4a28');   // the patch on the hip
+          for (const [x, y] of [[-3, 2.5], [2, 3], [6, 2.4]]) pE(g, x, by + y, 0.7, 0.5, 0, 'rgba(201,131,69,0.8)');   // freckles
+        },
+        tail: (g, tx, ty, s, run) => tailChain(g, tx, ty, t, run, { n: 7, len: 15, prof: f => 2.8 - 1.6 * f, a: -2.3, curl: 0.22, root: 0.35, amp: 0.12, lag: 0.4, fq: 9, col: '#fbfaf7', under: '#ddd6cc', r: { fq: 13 } }),
+        head: (g, hx, hy, t, run) => {
+          const r = 6.2, ew = run ? Math.sin(t * 24) * 0.18 : Math.sin(t * 2) * 0.06;
+          // the back ear stands up: tall, dark edges, ginger inside
+          g.save(); g.translate(hx - 3, hy - 4.5); g.rotate(-0.25 + ew * 0.4);
+          g.fillStyle = '#6b4024'; g.beginPath(); g.moveTo(-3, 1); g.quadraticCurveTo(-3.5, -7, 0.5, -11); g.quadraticCurveTo(3.6, -6, 3, 1); g.closePath(); g.fill();
+          g.fillStyle = '#d99a5c'; g.beginPath(); g.moveTo(-1.4, 0); g.quadraticCurveTo(-1.6, -5.5, 0.4, -8.5); g.quadraticCurveTo(2, -5, 1.6, 0); g.closePath(); g.fill();
+          g.restore();
+          const hg = g.createRadialGradient(hx - 2, hy - 2.5, 1, hx, hy, r * 1.1); hg.addColorStop(0, '#e2a462'); hg.addColorStop(1, '#a8652f');
+          g.fillStyle = hg; g.beginPath(); g.ellipse(hx, hy, r, r * 0.92, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = '#fbfaf7'; g.beginPath(); g.moveTo(hx + 1.6, hy - r * 0.9); g.quadraticCurveTo(hx + 3.2, hy - 2, hx + 4, hy + 1); g.lineTo(hx + 1.6, hy + 2); g.quadraticCurveTo(hx + 1.4, hy - 2, hx + 0.6, hy - r * 0.85); g.closePath(); g.fill();   // the white blaze
+          pE(g, hx + 5.4, hy + 2, 3.8, 2.6, 0.12, '#fbfaf7');                                     // the white muzzle
+          pE(g, hx + 5.4, hy + 3.2, 3, 1.4, 0.1, 'rgba(150,140,130,0.35)');
+          pE(g, hx + 8.6, hy + 1.2, 1.7, 1.25, 0, '#2a2522'); pE(g, hx + 8.1, hy + 0.7, 0.55, 0.4, 0, 'rgba(255,255,255,0.6)');
+          line(g, [hx + 7.8, hy + 2.4, hx + 6.4, hy + 3.8, hx + 4.6, hy + 3.6], 'rgba(0,0,0,0.45)', 0.6);
+          if (run) pE(g, hx + 5.6, hy + 4.6 + Math.sin(t * 26) * 0.4, 1.3, 1.9, 0.2, '#ff7b9a');
+          petEye(g, hx + 1.2, hy - 1.4, 1.6, t, '#5d3218', 'round', 1.3); petEye(g, hx + 5, hy - 1.6, 1.3, t, '#5d3218', 'round', 1.3);
+          // the front ear folds: dark-tipped, flopping as she runs
+          g.save(); g.translate(hx - 0.5, hy - r * 0.7); g.rotate(0.55 + ew);
+          g.fillStyle = '#7a4a2a'; g.beginPath(); g.moveTo(-2.6, 0); g.quadraticCurveTo(-2, -7, 2.6, -8); g.quadraticCurveTo(5.4, -6, 4.4, -2.4); g.quadraticCurveTo(2, 0.6, -2.6, 0); g.fill();
+          g.fillStyle = '#4a2b17'; g.beginPath(); g.moveTo(2.6, -8); g.quadraticCurveTo(5.4, -6, 4.4, -2.4); g.lineTo(3.3, -4.5); g.closePath(); g.fill();
+          g.restore();
+        } });
+    } else if (id === 'd_sonya') {   // Соня (Насики) — a round tabby cat: grey-brown stripes, a white bib, chin and paws, green eyes
+      quad(g, t, still, { L: 8.5, w: 2.8, rx: 10.5, ry: 6.3, col: '#7f746a', belly: '#fafafa', paw: '#fafafa', legCol: '#eee8e1', f: 12,
+        under: (g, by) => fluff(g, 0, by + 0.4, 10.6, 6.3, 16, 0.06, '#6e645b', 0),
+        marks: (g, by) => {
+          g.save(); g.beginPath(); g.ellipse(0, by, 10.5, 6.3, 0, 0, Math.PI * 2); g.clip();
+          g.strokeStyle = 'rgba(52,44,38,0.75)'; g.lineWidth = 1.2;   // tabby stripes, curving down the sides
+          for (const k of [-7, -4, -1, 2, 5]) { g.beginPath(); g.moveTo(k, by - 6.5); g.quadraticCurveTo(k - 2, by - 2, k - 0.5, by + 1.5); g.stroke(); }
+          pE(g, 6, by + 3, 4, 3, 0, '#fafafa'); g.restore();
+        },
+        tail: (g, tx, ty, s, run) => { const q = tailChain(g, tx, ty, t, run, { n: 7, len: 16, w0: 3.2, w1: 2.4, a: -2.1, curl: 0.15, amp: 0.3, lag: 0.75, fq: 2, col: '#7f746a', r: { a: -2.7, curl: 0.08, fq: 5.5 } });
+          for (let k = 2; k < 7; k += 2) pE(g, q[k][0], q[k][1], 1.5, 1.5, 0, '#3e352f'); pE(g, q[7][0], q[7][1], 1.3, 1.3, 0, '#3e352f'); },
+        head: (g, hx, hy, t) => {
+          catHead(g, hx, hy, t, { col: '#857a70', r: 6.6, inner: '#e8b0a8', iris: '#9ccc65', pupil: 'slit', muzzle: '#fafafa', stripes: '#4a4038', nose: '#d99a95', whisk: '#ffffff', seed: 0.3 });
+          pE(g, hx + 2.4, hy + 4.6, 3.6, 2.4, 0, '#fafafa');   // the white chin and bib
+          line(g, [hx - 2.6, hy + 1.4, hx - 4.6, hy + 2.6], '#4a4038', 0.8); line(g, [hx - 2.4, hy + 3, hx - 4.4, hy + 4], '#4a4038', 0.8);   // cheek stripes
+        } });
+    } else if (id === 'd_asya') {   // Ася (Насики) — an oriental, seal-point: slim and long-legged, a cream body, a dark
+      // wedge-shaped mask, huge dark ears, blue almond eyes, dark legs and a whip-thin dark tail
+      quad(g, t, still, { L: 12.5, w: 2, rx: 11, ry: 4.6, col: '#efe5d3', belly: '#f8f2e6', paw: '#3a281d', legCol: '#5a4030', f: 11.5, bounce: 1.4,
+        marks: (g, by) => { g.save(); g.beginPath(); g.ellipse(0, by, 11, 4.6, 0, 0, Math.PI * 2); g.clip(); const sg = g.createLinearGradient(-11, 0, 4, 0); sg.addColorStop(0, 'rgba(120,90,60,0.45)'); sg.addColorStop(1, 'rgba(120,90,60,0)'); g.fillStyle = sg; g.fillRect(-11, by - 5, 15, 10); g.restore(); },
+        tail: (g, tx, ty, s, run) => tailChain(g, tx, ty, t, run, { n: 9, len: 22, w0: 2, w1: 0.9, a: -2.5, curl: 0.06, amp: 0.3, lag: 0.7, fq: 2.2, col: '#4a3426', r: { a: -2.85, curl: 0, fq: 5 } }),
+        hdx: 5, hdy: 4,
+        head: (g, hx, hy, t) => {
+          for (const [ex, a, k] of [[-3.4, -0.45, 0.8], [1.6, -0.1, 1]]) {   // huge ears
+            g.save(); g.translate(hx + ex, hy - 3); g.rotate(a);
+            g.fillStyle = shade('#3e2a1e', k); g.beginPath(); g.moveTo(-3.4, 0.5); g.lineTo(0.2, -11); g.lineTo(3.4, 0.5); g.closePath(); g.fill();
+            g.fillStyle = shade('#a5776a', k); g.beginPath(); g.moveTo(-1.6, -0.5); g.lineTo(0.2, -8); g.lineTo(1.8, -0.5); g.closePath(); g.fill();
+            g.restore();
+          }
+          g.fillStyle = (() => { const gr = g.createRadialGradient(hx - 1, hy - 2, 0.5, hx, hy, 7); gr.addColorStop(0, '#f6efe2'); gr.addColorStop(1, '#d9ccb6'); return gr; })();
+          g.beginPath(); g.moveTo(hx - 5.5, hy - 2); g.quadraticCurveTo(hx - 2, hy - 6.5, hx + 3, hy - 4.5); g.quadraticCurveTo(hx + 9, hy - 1, hx + 10.5, hy + 1.6); g.quadraticCurveTo(hx + 6, hy + 4.6, hx - 2, hy + 3.6); g.quadraticCurveTo(hx - 6, hy + 2, hx - 5.5, hy - 2); g.fill();   // a long wedge
+          const mg = g.createRadialGradient(hx + 7, hy + 1, 0.5, hx + 6, hy + 0.5, 6); mg.addColorStop(0, '#2e2018'); mg.addColorStop(0.7, 'rgba(62,42,30,0.85)'); mg.addColorStop(1, 'rgba(62,42,30,0)');
+          g.fillStyle = mg; g.beginPath(); g.moveTo(hx + 0.5, hy - 3.6); g.quadraticCurveTo(hx + 8, hy - 2.6, hx + 10.6, hy + 1.6); g.quadraticCurveTo(hx + 6, hy + 4.4, hx + 1, hy + 3); g.closePath(); g.fill();   // the dark mask
+          for (const [ex, ey, r2] of [[hx + 4.2, hy - 1.2, 1.6], [hx + 7.6, hy - 1, 1.2]]) {   // blue almond eyes
+            g.save(); g.translate(ex, ey); g.rotate(-0.25);
+            g.fillStyle = '#5ba7e8'; g.beginPath(); g.ellipse(0, 0, r2 * 1.3, r2 * 0.75, 0, 0, Math.PI * 2); g.fill();
+            g.fillStyle = '#111'; g.beginPath(); g.ellipse(0.2, 0, r2 * 0.3, r2 * 0.65, 0, 0, Math.PI * 2); g.fill();
+            g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.arc(-r2 * 0.4, -r2 * 0.25, r2 * 0.25, 0, Math.PI * 2); g.fill();
+            g.restore();
+          }
+          pE(g, hx + 10.4, hy + 1.6, 0.8, 0.6, 0, '#1a120d');
+          g.globalAlpha *= 0.6; for (const dy of [-0.6, 0.6]) line(g, [hx + 9.4, hy + 2.6, hx + 15, hy + 2.2 + dy * 2], '#e0d6c8', 0.35); g.globalAlpha /= 0.6;
+        } });
     } else if (id === 'lvl_star') {   // level 30 reward: a little star with a face, trailing sparkles
       const fy = -64 + Math.sin(t * 3) * 4, rot = Math.sin(t * 2) * 0.25;
       g.translate(0, fy);
@@ -7533,7 +7596,7 @@
   // =====================================================================
   const ui = document.getElementById('ui'), panel = document.getElementById('panel');
   const bPause = document.getElementById('bPause'), bSound = document.getElementById('bSound');
-  const bSlide = document.getElementById('bSlide');
+  const bSlide = document.getElementById('bSlide'), bJump = document.getElementById('bJump');
 
   let devBtn = null, devEvBtn = null;
   // event test: every mini-event as a button; the run starts right at it
@@ -8908,6 +8971,9 @@
   // on-screen slide button (touch devices)
   bSlide.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); slideHeld = true; });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => bSlide.addEventListener(ev, () => { slideHeld = false; }));
+  // on-screen jump button (touch devices); holding it keeps the jetpack event's thrust on
+  bJump.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); ensureAudio(); jumpHeld = true; jumpPress(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => bJump.addEventListener(ev, () => { jumpHeld = false; }));
 
   window.addEventListener('keydown', e => {
     const k = e.code;
@@ -9086,6 +9152,7 @@
     S = ['ru', 'be', 'kk', 'uk', 'uz'].includes(lang) ? TEXT.ru : TEXT.en;
     document.documentElement.lang = S === TEXT.ru ? 'ru' : 'en';
     document.title = S.title;
+    { const ru = S === TEXT.ru; document.querySelector('#bJump small').textContent = ru ? 'прыжок' : 'jump'; document.querySelector('#bSlide small').textContent = ru ? 'подкат' : 'slide'; }
     try { applyLoaded(await SDK.load()); } catch (e) { }
     await SDK.initPayments();
     dayTick();   // 1.0.49: daily ranking rewards / the coins-today counter
