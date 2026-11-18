@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.72';
+  const VERSION = '1.0.73';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -140,6 +140,7 @@
         starter: ['Набор дня', 'Каждый день новый: {c} монет, {m} магнитов и {i}. Один раз в день.'],
         starter_perm: ['Набор дня навсегда', 'Купи один раз — и забирай «Набор дня» бесплатно каждый день.'],
         life: ['Вторая жизнь', 'Одно спасение от удара в каждом забеге. Навсегда.'],
+        unlock_all: ['Все скины и питомцы', 'Сразу открывает всех стикменов и всех питомцев — и из магазина за монеты, и премиум. Новые тоже будут твоими.'],
         magnet_perm: ['Постоянный магнит', 'Монеты сами летят к тебе всё время — в каждом забеге и на уровнях. Купленные магниты выкупаются за полную цену.'],
         coins_s: ['Горстка монет', '2 000 монет'], coins_m: ['Мешок монет', '6 000 монет'],
         coins_l: ['Сундук монет', '15 000 монет'], coins_xl: ['Гора монет', '40 000 монет'],
@@ -381,6 +382,7 @@
         starter: ['Pack of the day', 'New every day: {c} coins, {m} magnets and {i}. Once a day.'],
         starter_perm: ['Pack of the day forever', 'Buy once — and claim the Pack of the day for free every day.'],
         life: ['Second life', 'Survive one hit in every run. Forever.'],
+        unlock_all: ['All skins and pets', 'Unlocks every stickman and every pet at once — from the coin shop and premium. New ones will be yours too.'],
         magnet_perm: ['Permanent magnet', 'Coins fly to you all the time — in every run and on levels. Magnets you bought are bought back at full price.'],
         coins_s: ['Handful of coins', '2,000 coins'], coins_m: ['Bag of coins', '6,000 coins'],
         coins_l: ['Chest of coins', '15,000 coins'], coins_xl: ['Mountain of coins', '40,000 coins'],
@@ -835,6 +837,7 @@
     { id: 'starter_perm', yan: 25, sec: 'main' },
     { id: 'magnet_perm', yan: 50, sec: 'main' },
     { id: 'life', yan: 70, sec: 'main' },
+    { id: 'unlock_all', yan: 70, sec: 'main' },   // 1.0.73: every skin and pet, coin and premium
     ...[[500, 3], [1000, 6], [2000, 11], [4000, 20], [10000, 48], [25000, 110]]   // 1.0.60 prices
       .map(([c, y]) => ({ id: 'coins_' + c, yan: y, coins: c, consumable: true, sec: 'coins' })),
     // 1.0.50: new premium characters; of the old ones only the robot, the vampire and the clown are still sold
@@ -1437,7 +1440,7 @@
     life: false, magnets: 0, seen: {}, stats: newStats(),
     wOpen: {}, easyFails: 0, xp: 0, lvl: 1, title: '', titles: {},
     daily: { last: 0, count: 0, doubled: 0 }, tasks: { day: 0, list: [] }, dailyBest: { day: 0, m: 0 }, ach: {},
-    noAds: false, magnetPerm: false, starterPerm: false, freeChestAt: 0, wheel: { day: 0, spins: 0 }, reviewAsked: false, shortcut: false, starterDay: 0,
+    noAds: false, magnetPerm: false, starterPerm: false, unlockAll: false, freeChestAt: 0, wheel: { day: 0, spins: 0 }, reviewAsked: false, shortcut: false, starterDay: 0,
     tut: { jump: 0, slide: 0 }, paid: [], migrations: {}, ver: ''
   };
   const DEFAULT_SAVE = JSON.parse(JSON.stringify(save));
@@ -8831,6 +8834,17 @@
     save.wallet += n; save.magnets = 0;
     setTimeout(() => toast(S.magnetsSold.replace('{n}', n)), 600);
   }
+  // 1.0.73: «Все скины и питомцы» — every skin and pet (coin shop + premium) is owned; also run on load,
+  // so skins and pets added in later versions arrive by themselves. They count as paid (survive a reset).
+  function unlockEverything() {
+    if (!save.unlockAll) return;
+    const ids = [...SHOP.color, ...SHOP.pet].map(it => it.id)
+      .concat(PRODUCTS.filter(pr => pr.item && !pr.legacy && (pr.cat === 'color' || pr.cat === 'pet')).map(pr => pr.item));
+    for (const id of ids) {
+      if (!save.owned.includes(id)) save.owned.push(id);
+      if (!save.paid.includes(id)) save.paid.push(id);
+    }
+  }
   function handlePurchase(p) {
     const pr = PRODUCTS.find(x => x.id === p.productID);
     if (!pr) return;
@@ -8840,6 +8854,7 @@
     else if (pr.id === 'starter_perm') save.starterPerm = true;
     else if (pr.id === 'magnet_perm') { save.magnetPerm = true; sellMagnets(); }
     else if (pr.id === 'life') save.life = true;
+    else if (pr.id === 'unlock_all') { save.unlockAll = true; unlockEverything(); }
     else if (pr.item) {
       if (!save.owned.includes(pr.item)) save.owned.push(pr.item);
       if (!save.paid.includes(pr.item)) save.paid.push(pr.item);   // survives a progress reset
@@ -8858,6 +8873,14 @@
       g.strokeStyle = '#e53935'; g.lineWidth = 5; g.beginPath(); g.moveTo(12, 56); g.lineTo(52, 14); g.stroke();
     } else if (id === 'life') {
       drawHeart(g, 32, 36, 3.2, '#ff4d6d');
+    } else if (id === 'unlock_all') {   // an open gold padlock over a stickman and a paw
+      g.save(); g.translate(19, 38); g.strokeStyle = '#1d1d26'; g.lineWidth = 3; g.lineCap = 'round';
+      g.beginPath(); g.arc(0, -12, 5, 0, Math.PI * 2); g.moveTo(0, -7); g.lineTo(0, 6); g.moveTo(-7, -2); g.lineTo(7, -4); g.moveTo(0, 6); g.lineTo(-6, 16); g.moveTo(0, 6); g.lineTo(6, 16); g.stroke(); g.restore();
+      g.fillStyle = '#8d5a3b'; g.beginPath(); g.ellipse(45, 50, 6, 5, 0, 0, Math.PI * 2); g.fill();
+      for (const [dx, dy] of [[-6, -6], [-2, -9], [2, -9], [6, -6]]) { g.beginPath(); g.arc(45 + dx, 50 + dy, 2.3, 0, Math.PI * 2); g.fill(); }
+      g.strokeStyle = '#b07800'; g.lineWidth = 3.5; g.beginPath(); g.arc(40, 14, 6, Math.PI, Math.PI * 1.95); g.stroke();
+      g.fillStyle = goldGrad(g, 38, 22, 10); roundRectOn(g, 31, 17, 18, 15, 3); g.fill();
+      g.fillStyle = '#7a4f00'; g.beginPath(); g.arc(40, 23, 2, 0, Math.PI * 2); g.fill(); g.fillRect(39, 23, 2, 5);
     } else if (id === 'magnet_perm') {
       drawMagnetIcon(g, 32, 34, 2.2);
       g.fillStyle = '#ffd54f'; g.font = '900 16px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('∞', 32, 62);
@@ -8916,7 +8939,7 @@
         const it = starterItem();
         desc = d0.replace('{c}', STARTER.coins).replace('{m}', STARTER.magnets).replace('{i}', it ? `${S.catNoun[it.cat]} «${S.items[it.id]}»` : '—') + (it ? '' : ' ' + S.starterMore);
       }
-      const done = pr.id === 'noads' ? save.noAds : pr.id === 'starter_perm' ? save.starterPerm : pr.id === 'magnet_perm' ? save.magnetPerm : pr.id === 'life' ? save.life : save.starterDay === today();
+      const done = pr.id === 'noads' ? save.noAds : pr.id === 'starter_perm' ? save.starterPerm : pr.id === 'magnet_perm' ? save.magnetPerm : pr.id === 'life' ? save.life : pr.id === 'unlock_all' ? save.unlockAll : save.starterDay === today();
       if (pr.id === 'starter' && save.starterPerm && !done)
         return `<div class="row prem"><canvas class="ic sm" data-pid="${pr.id}" width="96" height="108"></canvas>
         <div class="rt"><b>${name}</b><small>${desc}</small></div>
@@ -9611,6 +9634,7 @@
       if (id && !(findItem(c, id) && save.owned.includes(id))) save.look[c] = FREE[c] || null;
     }
     migrate();
+    unlockEverything();
     sellMagnets();
   }
 
@@ -9669,7 +9693,7 @@
   }
   function doReset() {
     const keepOwned = save.owned.filter(id => IAP_ITEMS().includes(id));   // bought for yan stays
-    const keep = { noAds: save.noAds, sound: save.sound, paid: IAP_ITEMS().slice() };
+    const keep = { noAds: save.noAds, sound: save.sound, paid: IAP_ITEMS().slice(), unlockAll: save.unlockAll, magnetPerm: save.magnetPerm, starterPerm: save.starterPerm };   // 1.0.73: perks bought for yan stay too
     const fresh = JSON.parse(JSON.stringify(DEFAULT_SAVE));
     for (const k of Object.keys(save)) delete save[k];
     Object.assign(save, fresh, keep);
