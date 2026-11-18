@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.69';
+  const VERSION = '1.0.70';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -1479,11 +1479,34 @@
   const canvas = document.getElementById('game');
   let ctx = canvas.getContext('2d');   // `let`: the encyclopedia draws hazards into its own little canvases
   let W = 0, H = 0, DPR = 1, scale = 1, viewW = 560, viewH = 360, groundY = 290, px = 140;
+  // 1.0.70: adaptive resolution. Phones start drawing at 0.75 of the (capped) screen resolution; every second the real frame
+  // rate is measured — below 50 fps the resolution steps down, after a while at 58+ fps it steps back up, but never again
+  // to a level that was too slow. Coarse pointer = a phone or tablet.
+  const IS_PHONE = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  let renderQ = IS_PHONE ? 0.75 : 1, qMax = 1, qCool = 3, perfN = 0, perfT = 0;
+  const Q_MIN = 0.45;
+  let dropFrom = null, noDrop = false;   // the quality and fps before the last step down
+  function adaptQ(fps) {
+    if (dropFrom) {   // did the last step down help? if not, the phone is capped (battery saver / 30 Hz) or busy elsewhere
+      const helped = fps > dropFrom.fps * 1.12;
+      if (!helped) { renderQ = dropFrom.q; qMax = dropFrom.q; noDrop = true; dropFrom = null; resize(); return; }
+      dropFrom = null;
+    }
+    if (fps < 50 && !noDrop && renderQ > Q_MIN + 0.001) {
+      dropFrom = { q: renderQ, fps };
+      qMax = Math.min(qMax, renderQ * 0.97);                 // this level was too heavy: never go back up to it
+      renderQ = Math.max(Q_MIN, renderQ * (fps < 35 ? 0.72 : 0.85)); qCool = 3; resize();
+    } else if (fps > 58) {
+      if (qCool > 0) qCool--;
+      else if (renderQ < qMax - 0.001) { renderQ = Math.min(qMax, renderQ * 1.08); qCool = 5; resize(); }
+    }
+  }
+
 
   function resize() {
     // 1.0.66: the canvas fills the screen through CSS (100% x 100%); its real, often fractional size on phones is measured
     // here, so no strip of the page background is left along the right and bottom edges
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    DPR = Math.max(0.6, Math.min(window.devicePixelRatio || 1, 2) * renderQ);   // 1.0.70: renderQ = adaptive resolution
     const box = canvas.getBoundingClientRect();
     W = Math.max(1, box.width || window.innerWidth || 1); H = Math.max(1, box.height || window.innerHeight || 1);
     canvas.width = Math.ceil(W * DPR); canvas.height = Math.ceil(H * DPR);
@@ -1493,6 +1516,25 @@
     px = Math.min(150, viewW * 0.24);
   }
   window.addEventListener('resize', resize);
+  // 1.0.70: a sprite cache — things that never change (a building with its windows, a pyramid with its stone courses) are
+  // drawn once into a small canvas at the current resolution and then just stamped; the cache empties when the resolution changes
+  const SPR = new Map(); let sprRes = 0;
+  function sprite(key, x0, y0, w, h, fn) {   // the box (x0, y0, w, h) is in view units around the local origin; fn draws at the origin
+    const res = DPR * scale;
+    if (res !== sprRes) { SPR.clear(); sprRes = res; }
+    let cv = SPR.get(key);
+    if (!cv) {
+      cv = document.createElement('canvas'); cv.width = Math.max(1, Math.ceil(w * res)); cv.height = Math.max(1, Math.ceil(h * res));
+      const g = cv.getContext('2d'); g.scale(res, res); g.translate(-x0, -y0); g.lineCap = 'round'; g.lineJoin = 'round'; fn(g);
+      if (SPR.size > 300) SPR.clear();
+      SPR.set(key, cv);
+    }
+    return cv;
+  }
+  const stamp = (cv, x, y, x0, y0) => ctx.drawImage(cv, x + x0, y + y0, cv.width / sprRes, cv.height / sprRes);
+  // 1.0.70: soft blur glows are very slow on phones — the game canvas skips them there (colours and shapes stay)
+  if (IS_PHONE) { const bd = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
+    Object.defineProperty(ctx, 'shadowBlur', { get() { return 0; }, set() { }, configurable: true }); }
   window.addEventListener('orientationchange', () => setTimeout(resize, 200));
   document.addEventListener('fullscreenchange', () => setTimeout(resize, 50));
   if (window.visualViewport) visualViewport.addEventListener('resize', resize);   // the address bar hides / shows
@@ -2552,8 +2594,15 @@
 
   // 1.0.52: a palm drawn properly — a curved tapered trunk with ring scars, pinnate fronds (a midrib with
   // leaflets on both sides, light on top, darker below) drooping and swaying, a cluster of fruit under the crown
+  // 1.0.70: on the game canvas a palm is stamped from a cache of 8 sway positions (each one is ~130 shapes)
   function drawPalm(g, kind, seed) {
-    const sw = Math.sin(time * 1.2 + seed) * 0.06, date = kind === 'date';
+    const sw = Math.sin(time * 1.2 + seed) * 0.06;
+    if (g !== ctx) return drawPalmRaw(g, kind, sw);
+    const b = Math.round((sw / 0.06 + 1) * 3.5);   // 0..7
+    stamp(sprite('palm' + kind + b, -36, -86, 84, 94, g2 => drawPalmRaw(g2, kind, (b / 3.5 - 1) * 0.06)), 0, 0, -36, -86);
+  }
+  function drawPalmRaw(g, kind, sw) {
+    const date = kind === 'date';
     const top = { x: date ? 3 : 10, y: -50 };
     g.fillStyle = 'rgba(0,0,0,0.16)'; g.beginPath(); g.ellipse(2, 0, 14, 2.8, 0, 0, Math.PI * 2); g.fill();
     // the trunk: two curved edges, a bark gradient, ring scars
@@ -2693,8 +2742,8 @@
       const sx0 = x0 + i * 90, k = Math.floor((dist + sx0) / 90), hh = Math.sin(k * 12.7) * 1000, rr = hh - Math.floor(hh);
       for (const [px, py, rx, ry] of [[sx0 + rr * 40, groundY + 24 + rr * 26, 5 + rr * 4, 3 + rr * 2], [sx0 + 50 - rr * 20, groundY + 46 - rr * 10, 3 + rr * 3, 2]]) {
         ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(px + 1, py + 1.2, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-        const pg = ctx.createLinearGradient(0, py - ry, 0, py + ry); pg.addColorStop(0, shade(c.dirt, 1.35)); pg.addColorStop(1, shade(c.dirt, 0.85));
-        ctx.fillStyle = pg; ctx.beginPath(); ctx.ellipse(px, py, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = shade(c.dirt, 0.95); ctx.beginPath(); ctx.ellipse(px, py, rx, ry, 0, 0, Math.PI * 2); ctx.fill();   // 1.0.70: flat + a lit top, no per-frame gradient
+        ctx.fillStyle = shade(c.dirt, 1.3); ctx.beginPath(); ctx.ellipse(px - rx * 0.1, py - ry * 0.35, rx * 0.7, ry * 0.45, 0, 0, Math.PI * 2); ctx.fill();
       }
     }
     // grass band: a lit top, shade under it, a wavy edge
@@ -2713,13 +2762,14 @@
         else if (r > 0.85) { ctx.fillStyle = '#ff7043'; starPath(ctx, x + r * 40, groundY + 6, 3.4); ctx.fill(); }
       }
     } else {   // grass blades of different heights in two tones, swaying
-      const holes = LV.gaps.map(gp => [sx(gp.x) - 2, sx(gp.x) + gp.w + 2]);
+      const holes = LV.gaps.map(gp => [sx(gp.x) - 2, sx(gp.x) + gp.w + 2]), gA = new Path2D(), gB = new Path2D();
       for (let x = -(dist % 11); x < viewW; x += 11) {
         if (holes.some(([a, b]) => x > a && x < b)) continue;   // 1.0.52: nothing grows over a pit
         const k = Math.floor((dist + x) / 11), r = Math.abs(Math.sin(k * 3.7)), ht = 3 + r * 5, tip = Math.sin(time * 2.5 + k * 0.7) * 1.2;
-        ctx.fillStyle = shade(c.grass, k % 2 ? 1.18 : 0.92);
-        ctx.beginPath(); ctx.moveTo(x - 1.4, groundY + 1); ctx.quadraticCurveTo(x, groundY - ht * 0.5, x + tip, groundY - ht); ctx.quadraticCurveTo(x + 0.6, groundY - ht * 0.4, x + 1.6, groundY + 1); ctx.closePath(); ctx.fill();
+        const P = k % 2 ? gA : gB;   // 1.0.70: all blades of one tone go into one path
+        P.moveTo(x - 1.4, groundY + 1); P.quadraticCurveTo(x, groundY - ht * 0.5, x + tip, groundY - ht); P.quadraticCurveTo(x + 0.6, groundY - ht * 0.4, x + 1.6, groundY + 1); P.closePath();
       }
+      ctx.fillStyle = shade(c.grass, 1.18); ctx.fill(gA); ctx.fillStyle = shade(c.grass, 0.92); ctx.fill(gB);
     }
     if (WORLD[c.decor] && WORLD[c.decor].ground) WORLD[c.decor].ground(c);
     // pits: rocky walls getting dark with depth, a lit rim (and bridges over them)
@@ -3114,16 +3164,18 @@
       },
       scen: (c, i, rnd) => {
         if (i % 3 === 0) {   // saloon facade
-          ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(-28, -2, 60, 4);
-          const fg = ctx.createLinearGradient(-26, 0, 26, 0); fg.addColorStop(0, '#a1887f'); fg.addColorStop(1, '#6d4c41');
-          ctx.fillStyle = fg; ctx.fillRect(-26, -50, 52, 50);
-          ctx.strokeStyle = 'rgba(60,35,20,0.45)'; ctx.lineWidth = 0.7; for (let q = -46; q < 0; q += 4) { ctx.beginPath(); ctx.moveTo(-26, q); ctx.lineTo(26, q); ctx.stroke(); }
-          ctx.fillStyle = '#5d4037'; ctx.fillRect(-30, -58, 60, 9); ctx.fillStyle = '#efebe9'; ctx.fillRect(-22, -57, 44, 7);
-          ctx.fillStyle = '#3e2723'; ctx.font = '900 6.5px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('SALOON', 0, -51.5);
-          ctx.fillStyle = '#4e342e'; ctx.fillRect(-30, -28, 60, 3); for (const px3 of [-28, -10, 10, 27]) ctx.fillRect(px3, -26, 2, 26);   // the porch roof on posts
-          ctx.fillStyle = '#2e1d16'; ctx.fillRect(-8, -24, 16, 24);
+          stamp(sprite('saloon', -32, -60, 66, 64, g => {   // 1.0.70: the facade is drawn once
+            g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(-28, -2, 60, 4);
+            const fg = g.createLinearGradient(-26, 0, 26, 0); fg.addColorStop(0, '#a1887f'); fg.addColorStop(1, '#6d4c41');
+            g.fillStyle = fg; g.fillRect(-26, -50, 52, 50);
+            g.strokeStyle = 'rgba(60,35,20,0.45)'; g.lineWidth = 0.7; for (let q = -46; q < 0; q += 4) { g.beginPath(); g.moveTo(-26, q); g.lineTo(26, q); g.stroke(); }
+            g.fillStyle = '#5d4037'; g.fillRect(-30, -58, 60, 9); g.fillStyle = '#efebe9'; g.fillRect(-22, -57, 44, 7);
+            g.fillStyle = '#3e2723'; g.font = '900 6.5px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('SALOON', 0, -51.5);
+            g.fillStyle = '#4e342e'; g.fillRect(-30, -28, 60, 3); for (const px3 of [-28, -10, 10, 27]) g.fillRect(px3, -26, 2, 26);   // the porch roof on posts
+            g.fillStyle = '#2e1d16'; g.fillRect(-8, -24, 16, 24);
+            for (const wx of [-20, 10]) { const wg2 = g.createLinearGradient(0, -42, 0, -32); wg2.addColorStop(0, '#fff3c4'); wg2.addColorStop(1, '#ffb74d'); g.fillStyle = wg2; g.fillRect(wx, -42, 10, 9); g.fillStyle = '#4e342e'; g.fillRect(wx + 4.5, -42, 1, 9); g.fillRect(wx, -38, 10, 1); }
+          }), 0, 0, -32, -60);
           const sw2 = Math.sin(time * 3) * 1.5; ctx.fillStyle = '#8d6e63'; ctx.fillRect(-8, -18, 7.5 + sw2 * 0.3, 10); ctx.fillRect(0.5 - sw2 * 0.3, -18, 7.5, 10);   // swinging doors
-          for (const wx of [-20, 10]) { const wg2 = ctx.createLinearGradient(0, -42, 0, -32); wg2.addColorStop(0, '#fff3c4'); wg2.addColorStop(1, '#ffb74d'); ctx.fillStyle = wg2; ctx.fillRect(wx, -42, 10, 9); ctx.fillStyle = '#4e342e'; ctx.fillRect(wx + 4.5, -42, 1, 9); ctx.fillRect(wx, -38, 10, 1); }
         } else {   // saguaro
           ctx.fillStyle = '#558b2f'; roundRectOn(ctx, -4.5, -46, 9, 46, 4.5); ctx.fill();
           roundRectOn(ctx, -14, -34, 6, 16, 3); ctx.fill(); roundRectOn(ctx, -14, -22, 12, 5, 2.5); ctx.fill();
@@ -3164,11 +3216,14 @@
         const span = 1100;
         for (let i = 0; i < 22; i++) {
           const w = 36 + (i * 37) % 44, h = 90 + (i * 53) % 130, x = wrapX(i * 52 - dist * 0.15, span) - 60;
-          ctx.fillStyle = '#1a1033'; ctx.fillRect(x, groundY - h, w, h);
           const nc = ['#ff4081', '#00e5ff', '#b388ff', '#76ff03'][i % 4];
-          ctx.fillStyle = nc; ctx.globalAlpha = 0.85; ctx.fillRect(x, groundY - h, w, 2); ctx.globalAlpha = 1;
-          ctx.fillStyle = 'rgba(255,255,255,0.12)';
-          for (let wy = groundY - h + 10; wy < groundY - 10; wy += 12) for (let wx = x + 5; wx < x + w - 6; wx += 9) if (((wx * 3 + wy) | 0) % 4) ctx.fillRect(wx, wy, 4, 5);
+          if (x > viewW || x + w < 0) continue;
+          stamp(sprite('neonb' + i, 0, 0, w, h, g => {   // the building with its windows, drawn once
+            g.fillStyle = '#1a1033'; g.fillRect(0, 0, w, h);
+            g.fillStyle = nc; g.globalAlpha = 0.85; g.fillRect(0, 0, w, 2); g.globalAlpha = 1;
+            g.fillStyle = 'rgba(255,255,255,0.12)';
+            for (let wy = 10, row = 0; wy < h - 10; wy += 12, row++) for (let wx = 5, col = 0; wx < w - 6; wx += 9, col++) if ((col * 3 + row + i) % 4) g.fillRect(wx, wy, 4, 5);
+          }), x, groundY - h, 0, 0);
           if (i % 3 === 0) {   // glowing sign
             const on = Math.sin(time * 3 + i) > -0.6;
             ctx.save(); ctx.shadowColor = nc; ctx.shadowBlur = on ? 12 : 0; ctx.strokeStyle = on ? nc : 'rgba(120,120,140,0.5)'; ctx.lineWidth = 2;
@@ -3307,11 +3362,14 @@
       far: c => {
         for (let i = 0; i < 4; i++) {
           const x = wrapX(i * 260 - dist * 0.08, viewW + 400) - 200, hh = 80 + (i % 3) * 35;
-          const pg = ctx.createLinearGradient(x - hh, 0, x + hh, 0); pg.addColorStop(0, shade(c.far, 1.15)); pg.addColorStop(0.5, shade(c.far, 1.15)); pg.addColorStop(0.5, shade(c.far, 0.85)); pg.addColorStop(1, shade(c.far, 0.8));
-          ctx.fillStyle = pg; ctx.beginPath(); ctx.moveTo(x - hh * 1.2, groundY); ctx.lineTo(x, groundY - hh); ctx.lineTo(x + hh * 1.2, groundY); ctx.fill();
-          ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(120,80,30,0.22)'; ctx.lineWidth = 0.8;   // courses of stone blocks
-          for (let y = groundY - 7; y > groundY - hh; y -= 7) { ctx.beginPath(); ctx.moveTo(x - hh * 1.2, y); ctx.lineTo(x + hh * 1.2, y); ctx.stroke(); for (let bx = x - hh * 1.2 + ((groundY - y) / 7 % 2) * 6; bx < x + hh * 1.2; bx += 12) { ctx.beginPath(); ctx.moveTo(bx, y); ctx.lineTo(bx, y + 7); ctx.stroke(); } }
-          ctx.restore();
+          if (x + hh * 1.2 < 0 || x - hh * 1.2 > viewW) continue;
+          stamp(sprite('pyr' + hh + c.far, -hh * 1.2, -hh, hh * 2.4, hh, g => {   // the pyramid with its stone courses, drawn once
+          const pg = g.createLinearGradient(- hh, 0, + hh, 0); pg.addColorStop(0, shade(c.far, 1.15)); pg.addColorStop(0.5, shade(c.far, 1.15)); pg.addColorStop(0.5, shade(c.far, 0.85)); pg.addColorStop(1, shade(c.far, 0.8));
+          g.fillStyle = pg; g.beginPath(); g.moveTo(- hh * 1.2, 0); g.lineTo(0, - hh); g.lineTo(+ hh * 1.2, 0); g.fill();
+          g.save(); g.clip(); g.strokeStyle = 'rgba(120,80,30,0.22)'; g.lineWidth = 0.8;   // courses of stone blocks
+          for (let y = - 7; y > - hh; y -= 7) { g.beginPath(); g.moveTo(- hh * 1.2, y); g.lineTo(+ hh * 1.2, y); g.stroke(); for (let bx = - hh * 1.2 + ((-y) / 7 % 2) * 6; bx < + hh * 1.2; bx += 12) { g.beginPath(); g.moveTo(bx, y); g.lineTo(bx, y + 7); g.stroke(); } }
+          g.restore();
+          }), x, groundY, -hh * 1.2, -hh);
           ctx.fillStyle = '#ffd54f'; ctx.beginPath(); ctx.moveTo(x - 8, groundY - hh + 7); ctx.lineTo(x, groundY - hh); ctx.lineTo(x + 8, groundY - hh + 7); ctx.fill();
           const gl = Math.max(0, Math.sin(time * 1.5 + i)); if (gl > 0.8) { ctx.fillStyle = `rgba(255,255,255,${(gl - 0.8) * 5})`; ctx.fillRect(x - 5, groundY - hh + 2, 10, 1); ctx.fillRect(x - 0.5, groundY - hh - 3, 1, 10); }
         }
@@ -3415,20 +3473,20 @@
           ctx.strokeStyle = '#5d4037'; ctx.lineCap = 'round';
           for (const [ex, ey, w2] of [[-20, -42, 2.2], [20, -43, 2.2], [-6, -46, 1.6], [8, -47, 1.6]]) { ctx.lineWidth = w2; ctx.beginPath(); ctx.moveTo(0, -24); ctx.quadraticCurveTo(ex * 0.4, -34, ex + sw * 0.3, ey); ctx.stroke(); }
           const layer = (dy, k, a) => {
-            for (const [dx, yy, rx, ry] of [[-18, -44, 17, 4.5], [0, -47, 25, 5.5], [18, -45, 16, 4.5], [-8, -51, 14, 3.5], [10, -51, 12, 3.2]]) {
-              ctx.fillStyle = shade('#6b8e23', k); ctx.globalAlpha = a; ctx.beginPath(); ctx.ellipse(dx + sw, yy + dy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
-            }
-            ctx.globalAlpha = 1;
+            ctx.fillStyle = shade('#6b8e23', k); ctx.globalAlpha = a; ctx.beginPath();   // 1.0.70: one path per layer
+            for (const [dx, yy, rx, ry] of [[-18, -44, 17, 4.5], [0, -47, 25, 5.5], [18, -45, 16, 4.5], [-8, -51, 14, 3.5], [10, -51, 12, 3.2]]) { ctx.moveTo(dx + sw + rx, yy + dy); ctx.ellipse(dx + sw, yy + dy, rx, ry, 0, 0, Math.PI * 2); }
+            ctx.fill(); ctx.globalAlpha = 1;
           };
           layer(2.5, 0.55, 1); layer(0, 1, 1); layer(-2, 1.35, 0.55);
-          ctx.fillStyle = 'rgba(220,240,150,0.5)'; for (let q = 0; q < 9; q++) { ctx.beginPath(); ctx.arc(-22 + q * 5.5 + sw, -48 - (q % 3), 1.2, 0, Math.PI * 2); ctx.fill(); }
+          ctx.fillStyle = 'rgba(220,240,150,0.5)'; ctx.beginPath(); for (let q = 0; q < 9; q++) { ctx.moveTo(-20.8 + q * 5.5 + sw, -48 - (q % 3)); ctx.arc(-22 + q * 5.5 + sw, -48 - (q % 3), 1.2, 0, Math.PI * 2); } ctx.fill();
         }
         // tall golden grass: tapered blades in two tones that sway
+        const gA = new Path2D(), gB = new Path2D();   // 1.0.70: two batched paths instead of one per blade
         for (let k = -4; k <= 4; k++) {
-          const bx = 22 + k * 2.4, ht = 12 + ((k * 7 + i * 3) & 7) * 1.4, tip = Math.sin(time * 2 + k * 0.6 + i) * 2.4;
-          ctx.fillStyle = k % 2 ? '#e6c35a' : '#b8913a';
-          ctx.beginPath(); ctx.moveTo(bx - 1, 0); ctx.quadraticCurveTo(bx - 0.5, -ht * 0.5, bx + tip, -ht); ctx.quadraticCurveTo(bx + 0.6, -ht * 0.5, bx + 1, 0); ctx.closePath(); ctx.fill();
+          const bx = 22 + k * 2.4, ht = 12 + ((k * 7 + i * 3) & 7) * 1.4, tip = Math.sin(time * 2 + k * 0.6 + i) * 2.4, P = k % 2 ? gA : gB;
+          P.moveTo(bx - 1, 0); P.quadraticCurveTo(bx - 0.5, -ht * 0.5, bx + tip, -ht); P.quadraticCurveTo(bx + 0.6, -ht * 0.5, bx + 1, 0); P.closePath();
         }
+        ctx.fillStyle = '#e6c35a'; ctx.fill(gA); ctx.fillStyle = '#b8913a'; ctx.fill(gB);
       },
       fx: c => {   // warm dust motes drifting in the low sun
         for (let i = 0; i < 16; i++) {
@@ -3437,11 +3495,13 @@
         }
       },
       ground: c => {   // dry grass tufts along the track edge
+        const tA = new Path2D(), tB = new Path2D();   // 1.0.70: batched into two strokes
         for (let x = -(dist % 31); x < viewW; x += 31) {
           const k = Math.floor((dist + x) / 31), r = Math.abs(Math.sin(k * 7.7));
           if (LV.gaps.some(gp => x + r * 20 > sx(gp.x) - 6 && x + r * 20 < sx(gp.x) + gp.w + 6)) continue;
-          for (let q = 0; q < 4; q++) { const tip = Math.sin(time * 2.2 + k + q) * 1.5; ctx.strokeStyle = q % 2 ? '#e8c867' : '#a8862f'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + r * 20 + q * 2, groundY + 1); ctx.quadraticCurveTo(x + r * 20 + q * 2, groundY - 4, x + r * 20 + q * 2.6 + tip, groundY - 7 - (q % 3) * 2); ctx.stroke(); }
+          for (let q = 0; q < 4; q++) { const tip = Math.sin(time * 2.2 + k + q) * 1.5, T = q % 2 ? tA : tB; T.moveTo(x + r * 20 + q * 2, groundY + 1); T.quadraticCurveTo(x + r * 20 + q * 2, groundY - 4, x + r * 20 + q * 2.6 + tip, groundY - 7 - (q % 3) * 2); }
         }
+        ctx.lineWidth = 1.2; ctx.strokeStyle = '#e8c867'; ctx.stroke(tA); ctx.strokeStyle = '#a8862f'; ctx.stroke(tB);
       },
       haz: (x, w, h) => {   // a low thorn bush: tangled dry twigs, long white thorns, a few leaves
         const gy = groundY, cx = x + w / 2;
@@ -5852,7 +5912,14 @@
     }
   }
 
+  const SHADE = new Map();   // 1.0.70: colours are cached — shade() runs hundreds of times a frame
   function shade(hex, k) {   // k < 1 darker, k > 1 lighter
+    const key = hex + '|' + k, hit = SHADE.get(key);
+    if (hit) return hit;
+    if (SHADE.size > 6000) SHADE.clear();
+    const out = shadeRaw(hex, k); SHADE.set(key, out); return out;
+  }
+  function shadeRaw(hex, k) {
     let ch;
     if (hex[0] === 'r') ch = hex.match(/[\d.]+/g).slice(0, 3).map(Number);   // 1.0.44: also takes an rgb() made by shade()
     else { const n = parseInt(hex.slice(1), 16); ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
@@ -9453,6 +9520,10 @@
   function frame(now) {
     requestAnimationFrame(frame);
     let dt = (now - lastT) / 1000; lastT = now;
+    if (state !== 'loading' && !document.hidden && dt > 0 && dt < 0.5) {   // 1.0.70: measure the real frame rate once a second
+      perfN++; perfT += dt;
+      if (perfT >= 1) { adaptQ(perfN / perfT); perfN = 0; perfT = 0; }
+    } else { perfN = 0; perfT = 0; }
     if (dt > 0.1) dt = 0.1;
     if (state !== 'loading' && !document.hidden) save.stats.playTime += dt;   // the whole time the game is open
     if (state !== 'paused' && state !== 'loading') {
