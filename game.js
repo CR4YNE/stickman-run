@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.56';
+  const VERSION = '1.0.57';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -103,7 +103,8 @@
       daily: 'Ежедневная награда', dailyBtn: '🎁 Награда', day: 'День', claim: 'Забрать', claimed: '✓',
       friendPets: 'Питомцы разработчика и друзей', owner: 'Хозяин',
       forestGift: 'Мир «Пляж» стал настоящим пляжем. В подарок — мир «Новогодний лес»!',
-      comeBack: 'Возвращайся завтра за новой наградой!', exclusive: 'Эксклюзив — только за вход в игру',
+      comeBack: 'Возвращайся завтра за новой наградой!', exclusive: 'Каждый день — случайный премиум-скин или питомец. Повторов не бывает!',
+      dailyLeft: 'Ещё не получено: {n}', dailyGot: 'Сегодня тебе выпало:', dailyAll: 'Все премиум-скины и питомцы уже твои — держи монеты!',
       tasks: 'Задания', tasksBtn: '📋 Задания', taskDone: 'Готово!', newTasks: 'Новые задания через {t}',
       taskText: { coins: 'Собери {n} монет', endless: 'Пробеги {n} м в бесконечном забеге', jumps: 'Прыгни {n} раз',
         slides: 'Сделай {n} подкатов', level: 'Пройди уровней: {n}', gold: 'Собери {n} золотых монет', runs: 'Сыграй {n} забегов' },
@@ -343,7 +344,8 @@
       daily: 'Daily reward', dailyBtn: '🎁 Reward', day: 'Day', claim: 'Claim', claimed: '✓',
       friendPets: 'Pets of the developer and friends', owner: 'Owner',
       forestGift: 'The Beach world is now a real beach. Here is the New Year forest world as a gift!',
-      comeBack: 'Come back tomorrow for a new reward!', exclusive: 'Exclusive — only for logging in',
+      comeBack: 'Come back tomorrow for a new reward!', exclusive: 'Every day — a random premium skin or pet. Never a repeat!',
+      dailyLeft: 'Not received yet: {n}', dailyGot: 'Today you got:', dailyAll: 'You own every premium skin and pet — have some coins!',
       tasks: 'Tasks', tasksBtn: '📋 Tasks', taskDone: 'Done!', newTasks: 'New tasks in {t}',
       taskText: { coins: 'Collect {n} coins', endless: 'Run {n} m in the endless run', jumps: 'Jump {n} times',
         slides: 'Slide {n} times', level: 'Finish levels: {n}', gold: 'Collect {n} gold coins', runs: 'Play {n} runs' },
@@ -754,11 +756,9 @@
   const PRICE_SCALE = (COLLECTION_TARGET - fixedSum) / baseSum;
   for (const cat of Object.keys(SHOP)) for (const it of SHOP[cat])
     if (it.price > 0 && !it.fixed) it.price = Math.max(50, Math.round(it.price * PRICE_SCALE / 10) * 10);
-  // daily login rewards: one exclusive item per day for 10 days, then coins
-  // 1.0.26: new exclusives on days 1–5, 7, 8 (the old ones stay with whoever already got them)
-  const DAILY = [['trail', 'aurora'], ['hat', 'halo'], ['jump', 'fireworks'], ['acc', 'butterfly'], ['color', 'galaxy'],
-                 ['pet', 'ghost'], ['trail', 'comet'], ['hat', 'flowercrown'], ['pet', 'dragon'], ['color', 'prism']];
-  const DAILY_COINS = 150;
+  // 1.0.57: the daily login reward is one random premium skin or pet the player does not own yet (never a repeat);
+  // the old 10-day list is gone (items already received stay). Once everything is owned, coins instead.
+  const DAILY_ALL_COINS = 1000;
   // 1.0.27: a new set every 2 hours; a set of three takes about 10–15 minutes of normal play
   // (measured: ~80–110 coins/min, ~45 jumps/min, a slide every ~15 s once beams appear, ~1.5 min per run)
   const TASK_PERIOD = 2 * 3600 * 1000;
@@ -6885,32 +6885,43 @@
           pE(g, hx + 2.4, hy + 4.6, 3.6, 2.4, 0, '#fafafa');   // the white chin and bib
           line(g, [hx - 2.6, hy + 1.4, hx - 4.6, hy + 2.6], '#4a4038', 0.8); line(g, [hx - 2.4, hy + 3, hx - 4.4, hy + 4], '#4a4038', 0.8);   // cheek stripes
         } });
-    } else if (id === 'd_asya') {   // Ася (Насики) — an oriental, seal-point: slim and long-legged, a cream body, a dark
-      // wedge-shaped mask, huge dark ears, blue almond eyes, dark legs and a whip-thin dark tail
-      quad(g, t, still, { L: 12.5, w: 2, rx: 11, ry: 4.6, col: '#efe5d3', belly: '#f8f2e6', paw: '#3a281d', legCol: '#5a4030', f: 11.5, bounce: 1.4,
-        marks: (g, by) => { g.save(); g.beginPath(); g.ellipse(0, by, 11, 4.6, 0, 0, Math.PI * 2); g.clip(); const sg = g.createLinearGradient(-11, 0, 4, 0); sg.addColorStop(0, 'rgba(120,90,60,0.45)'); sg.addColorStop(1, 'rgba(120,90,60,0)'); g.fillStyle = sg; g.fillRect(-11, by - 5, 15, 10); g.restore(); },
-        tail: (g, tx, ty, s, run) => tailChain(g, tx, ty, t, run, { n: 9, len: 22, w0: 2, w1: 0.9, a: -2.5, curl: 0.06, amp: 0.3, lag: 0.7, fq: 2.2, col: '#4a3426', r: { a: -2.85, curl: 0, fq: 5 } }),
-        hdx: 5, hdy: 4,
+    } else if (id === 'd_asya') {   // Ася (Насики) — an oriental, seal-point (1.0.57 redraw): a slim but solid cream body that darkens
+      // towards the back and the legs, a 3/4 wedge head with the dark seal mask over the whole face, big ears growing out of the head,
+      // blue almond eyes, a long whip tail carried up in a curve
+      const SEAL = '#3b2a20', CREAM = '#f2e8d8';
+      quad(g, t, still, { L: 10.5, w: 2.3, rx: 11, ry: 5.4, col: CREAM, belly: '#faf5ec', paw: '#2e2018', legCol: '#7b5c48', f: 12, bounce: 1.5, hdx: 4.5, hdy: 2.6,
+        marks: (g, by) => {   // the points shading: a warm fawn haze over the back and the haunch
+          g.save(); g.beginPath(); g.ellipse(0, by, 11, 5.4, 0, 0, Math.PI * 2); g.clip();
+          const sg = g.createLinearGradient(-11, 0, 6, 0); sg.addColorStop(0, 'rgba(110,80,56,0.55)'); sg.addColorStop(1, 'rgba(110,80,56,0)');
+          g.fillStyle = sg; g.fillRect(-11, by - 6, 17, 12);
+          const tg = g.createLinearGradient(0, by - 5.4, 0, by); tg.addColorStop(0, 'rgba(120,90,64,0.35)'); tg.addColorStop(1, 'rgba(120,90,64,0)');
+          g.fillStyle = tg; g.fillRect(-11, by - 6, 22, 6); g.restore();
+        },
+        tail: (g, tx, ty, s, run) => { const q = tailChain(g, tx, ty, t, run, { n: 9, len: 20, w0: 2.4, w1: 1, a: -2.25, curl: 0.2, amp: 0.3, lag: 0.75, fq: 2, col: '#5a4232', r: { a: -2.75, curl: 0.1, fq: 5.5 } });
+          pE(g, q[9][0], q[9][1], 1, 1, 0, SEAL); },
         head: (g, hx, hy, t) => {
-          for (const [ex, a, k] of [[-3.4, -0.45, 0.8], [1.6, -0.1, 1]]) {   // huge ears
-            g.save(); g.translate(hx + ex, hy - 3); g.rotate(a);
-            g.fillStyle = shade('#3e2a1e', k); g.beginPath(); g.moveTo(-3.4, 0.5); g.lineTo(0.2, -11); g.lineTo(3.4, 0.5); g.closePath(); g.fill();
-            g.fillStyle = shade('#a5776a', k); g.beginPath(); g.moveTo(-1.6, -0.5); g.lineTo(0.2, -8); g.lineTo(1.8, -0.5); g.closePath(); g.fill();
-            g.restore();
+          const r = 6;
+          for (const [ex, back] of [[-3.6, 1], [2.4, 0]]) {   // big ears, wide at the base, set low on the sides of the head
+            g.fillStyle = back ? '#2c1f17' : SEAL;
+            g.beginPath(); g.moveTo(hx + ex - 3.6, hy - r * 0.2); g.lineTo(hx + ex - 0.4, hy - r - 7.5); g.lineTo(hx + ex + 3.4, hy - r * 0.35); g.closePath(); g.fill();
+            g.fillStyle = back ? '#8a645a' : '#b88a7c';
+            g.beginPath(); g.moveTo(hx + ex - 1.8, hy - r * 0.5); g.lineTo(hx + ex - 0.4, hy - r - 5.2); g.lineTo(hx + ex + 1.6, hy - r * 0.55); g.closePath(); g.fill();
           }
-          g.fillStyle = (() => { const gr = g.createRadialGradient(hx - 1, hy - 2, 0.5, hx, hy, 7); gr.addColorStop(0, '#f6efe2'); gr.addColorStop(1, '#d9ccb6'); return gr; })();
-          g.beginPath(); g.moveTo(hx - 5.5, hy - 2); g.quadraticCurveTo(hx - 2, hy - 6.5, hx + 3, hy - 4.5); g.quadraticCurveTo(hx + 9, hy - 1, hx + 10.5, hy + 1.6); g.quadraticCurveTo(hx + 6, hy + 4.6, hx - 2, hy + 3.6); g.quadraticCurveTo(hx - 6, hy + 2, hx - 5.5, hy - 2); g.fill();   // a long wedge
-          const mg = g.createRadialGradient(hx + 7, hy + 1, 0.5, hx + 6, hy + 0.5, 6); mg.addColorStop(0, '#2e2018'); mg.addColorStop(0.7, 'rgba(62,42,30,0.85)'); mg.addColorStop(1, 'rgba(62,42,30,0)');
-          g.fillStyle = mg; g.beginPath(); g.moveTo(hx + 0.5, hy - 3.6); g.quadraticCurveTo(hx + 8, hy - 2.6, hx + 10.6, hy + 1.6); g.quadraticCurveTo(hx + 6, hy + 4.4, hx + 1, hy + 3); g.closePath(); g.fill();   // the dark mask
-          for (const [ex, ey, r2] of [[hx + 4.2, hy - 1.2, 1.6], [hx + 7.6, hy - 1, 1.2]]) {   // blue almond eyes
-            g.save(); g.translate(ex, ey); g.rotate(-0.25);
-            g.fillStyle = '#5ba7e8'; g.beginPath(); g.ellipse(0, 0, r2 * 1.3, r2 * 0.75, 0, 0, Math.PI * 2); g.fill();
-            g.fillStyle = '#111'; g.beginPath(); g.ellipse(0.2, 0, r2 * 0.3, r2 * 0.65, 0, 0, Math.PI * 2); g.fill();
-            g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.arc(-r2 * 0.4, -r2 * 0.25, r2 * 0.25, 0, Math.PI * 2); g.fill();
-            g.restore();
-          }
-          pE(g, hx + 10.4, hy + 1.6, 0.8, 0.6, 0, '#1a120d');
-          g.globalAlpha *= 0.6; for (const dy of [-0.6, 0.6]) line(g, [hx + 9.4, hy + 2.6, hx + 15, hy + 2.2 + dy * 2], '#e0d6c8', 0.35); g.globalAlpha /= 0.6;
+          // the head: a slightly long, narrow wedge
+          g.save(); g.translate(hx, hy); g.scale(1.12, 0.9);
+          pE(g, 0, 0, r, r, 0, rGrad(g, 0, 0, r, '#efe3cf')); g.restore();
+          pE(g, hx + r * 0.75, hy + r * 0.32, r * 0.55, r * 0.38, 0.12, '#e6d7c0');   // the muzzle
+          // the seal mask: dark on the muzzle, fading out over the eyes towards the ears
+          g.save(); g.beginPath(); g.ellipse(hx, hy, r * 1.12, r * 0.9, 0, 0, Math.PI * 2); g.ellipse(hx + r * 0.75, hy + r * 0.32, r * 0.55, r * 0.38, 0.12, 0, Math.PI * 2); g.clip();
+          const mg = g.createRadialGradient(hx + r * 0.95, hy + r * 0.3, 0.3, hx + r * 0.6, hy + r * 0.05, r * 1.15);
+          mg.addColorStop(0, SEAL); mg.addColorStop(0.55, 'rgba(59,42,32,0.88)'); mg.addColorStop(1, 'rgba(59,42,32,0)');
+          g.fillStyle = mg; g.fillRect(hx - r * 1.2, hy - r, r * 3, r * 2.2);
+          g.restore();
+          petEye(g, hx - r * 0.02, hy - r * 0.16, r * 0.28, t, '#5aa9f0', 'slit', 0.7);   // blue almond eyes
+          petEye(g, hx + r * 0.6, hy - r * 0.18, r * 0.23, t, '#5aa9f0', 'slit', 0.7);
+          g.fillStyle = '#1a120d'; g.beginPath(); g.moveTo(hx + r * 1.2, hy + r * 0.12); g.lineTo(hx + r * 1.42, hy + r * 0.14); g.lineTo(hx + r * 1.3, hy + r * 0.32); g.closePath(); g.fill();
+          line(g, [hx + r * 0.95, hy + r * 0.58, hx + r * 1.15, hy + r * 0.48, hx + r * 1.35, hy + r * 0.56], '#1a120d', 0.6);
+          g.globalAlpha *= 0.7; for (const dy of [-0.6, 0.5]) line(g, [hx + r * 1.3, hy + r * 0.38, hx + r * 2.1, hy + r * 0.33 + dy], '#efe6d8', 0.45); g.globalAlpha /= 0.7;
         } });
     } else if (id === 'lvl_star') {   // level 30 reward: a little star with a face, trailing sparkles
       const fy = -64 + Math.sin(t * 3) * 4, rot = Math.sin(t * 2) * 0.25;
@@ -7957,33 +7968,33 @@
   // ---------- Daily reward ----------
   const dailyAvail = () => save.daily.last !== today();
 
+  const dailyPool = () => PRODUCTS.filter(pr => pr.item && !pr.legacy && (pr.cat === 'color' || pr.cat === 'pet') && !save.owned.includes(pr.item));
+
   function showDaily() {
-    const n = save.daily.count, avail = dailyAvail();
-    let cells = '';
-    DAILY.forEach(([cat, id], i) => {
-      const cls = i < n ? 'got' : (i === n && avail ? 'now' : '');
-      cells += `<div class="dcell ${cls}"><canvas class="ic" data-cat="${cat}" data-id="${id}" width="128" height="144"></canvas>
-        <small>${S.day} ${i + 1}</small><span>${i < n ? S.claimed : S.items[id]}</span></div>`;
-    });
-    const after = n >= DAILY.length ? `<p class="big">${coinHtml('+' + DAILY_COINS)}</p>` : '';
+    const avail = dailyAvail(), left = dailyPool().length, got = save.daily.got;
+    let body;
+    if (avail) body = `<div class="dprize">${lootHtml('dloot')}</div>
+      <p>${left ? S.dailyLeft.replace('{n}', left) : S.dailyAll}</p>
+      <button class="btn main" data-act="claimDaily">${S.claim}</button>`;
+    else if (got && got.day === today() && got.id) body = `<p>${S.dailyGot}</p>
+      <div class="dprize"><canvas class="ic" data-cat="${got.cat}" data-id="${got.id}" width="128" height="144"></canvas><b>${S.items[got.id]}</b></div>
+      <p>${S.comeBack}</p>`;
+    else body = `<p class="big">${coinHtml('+' + DAILY_ALL_COINS)}</p><p>${S.comeBack}</p>`;
     showPanel(`<div class="topline"><h2>${S.daily}</h2>${coinHtml(save.wallet)}</div>
-      <p class="small">${S.exclusive}</p>
-      <div class="dgrid">${cells}</div>${after}
-      ${avail ? `<button class="btn main" data-act="claimDaily">${S.claim}</button>` : `<p>${S.comeBack}</p>`}
-      ${!avail && save.daily.doubled !== today() ? adBtn('dbl', `${S.dbl} (+${save.daily.count <= DAILY.length ? 100 : DAILY_COINS})`) : ''}
+      <p class="small">${S.exclusive}</p>${body}
       <button class="btn${avail ? '' : ' main'}" data-act="menu">${S.back}</button>`, 'daily', true);
     panel.querySelectorAll('canvas.ic').forEach(cv => drawThumb(cv, cv.dataset.cat, cv.dataset.id));
   }
 
   function claimDaily() {
     if (!dailyAvail()) return;
-    const n = save.daily.count;
-    if (n < DAILY.length) {
-      const [cat, id] = DAILY[n];
-      if (!save.owned.includes(id)) save.owned.push(id);
-      save.look[cat] = id;
-      toast(`🎁 ${S.items[id]}`);
-    } else save.wallet += DAILY_COINS;
+    const pool = dailyPool(), pr = pool[Math.floor(Math.random() * pool.length)];
+    if (pr) {
+      save.owned.push(pr.item);
+      save.look[pr.cat] = pr.item;
+      save.daily.got = { day: today(), id: pr.item, cat: pr.cat };
+      toast(`🎁 ${S.items[pr.item]}`);
+    } else { save.wallet += DAILY_ALL_COINS; save.daily.got = { day: today() }; }
     save.daily.count++; save.daily.last = today();
     sfx.buy(); persist(); showDaily();
   }
@@ -8849,10 +8860,6 @@
     else if (act === 'claimTask') claimTask(+b.dataset.i);
     else if (act === 'ach') showAch();
     else if (act === 'x2') SDK.rewarded(ok => { if (ok && !x2Used) { x2Used = true; save.wallet += coinsGot; persist(); toast(`+${coinsGot}`); } showFail(); });
-    else if (act === 'dbl') SDK.rewarded(ok => {
-      if (ok && save.daily.doubled !== today()) { save.daily.doubled = today(); save.wallet += save.daily.count <= DAILY.length ? 100 : DAILY_COINS; persist(); }
-      showDaily();
-    });
     else if (act === 'freeChest') SDK.rewarded(ok => { if (ok && freeChestLeft() <= 0) openChest(true); else showShop(); });
     else if (act === 'buyItem') {
       const p = pendingItem, it = p && findItem(p.cat, p.id);
