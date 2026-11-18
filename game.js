@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.71';
+  const VERSION = '1.0.72';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -63,7 +63,7 @@
         bubbles: 'Пузыри', sparks: 'Искры', fire: 'Огонь', rainbow: 'Радуга',
         cloud: 'Облачко', stars: 'Звёздочки', notes: 'Ноты',
         bird: 'Птенчик', drone: 'Дрон', cat: 'Котик',
-        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня', d_lilu: 'Лилу', d_sonya: 'Соня', d_asya: 'Ася', d_dusha: 'Дюша', d_luna: 'Луна',
+        d_bonya: 'Боня', d_dixon: 'Диксон', d_kurt: 'Курт', d_yosya: 'Йося', d_onya: 'Оня', d_lilu: 'Лилу', d_sonya: 'Соня', d_asya: 'Ася', d_dusha: 'Дюша', d_luna: 'Луна', d_pulya: 'Пуля',
         flag: 'Флаг', dance: 'Танец', flip: 'Сальто',
         auto: 'День и ночь', desert: 'Пустыня', winter: 'Зима', city: 'Город', space: 'Космос',
         hearts: 'Сердечки', beanie: 'Шапка с помпоном', confetti: 'Конфетти', scarf: 'Шарф', neon: 'Неоновый',
@@ -304,7 +304,7 @@
         bubbles: 'Bubbles', sparks: 'Sparks', fire: 'Fire', rainbow: 'Rainbow',
         cloud: 'Cloud', stars: 'Stars', notes: 'Notes',
         bird: 'Chick', drone: 'Drone', cat: 'Kitty',
-        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx', d_lilu: 'Lilu', d_sonya: 'Sonya', d_asya: 'Asya', d_dusha: 'Dyusha', d_luna: 'Luna',
+        d_bonya: 'Bonya', d_dixon: 'Dixon', d_kurt: 'Kurt', d_yosya: 'Yosya', d_onya: 'Onyx', d_lilu: 'Lilu', d_sonya: 'Sonya', d_asya: 'Asya', d_dusha: 'Dyusha', d_luna: 'Luna', d_pulya: 'Pulya',
         flag: 'Flag', dance: 'Dance', flip: 'Backflip',
         auto: 'Day & night', desert: 'Desert', winter: 'Winter', city: 'City', space: 'Space',
         hearts: 'Hearts', beanie: 'Bobble hat', confetti: 'Confetti', scarf: 'Scarf', neon: 'Neon',
@@ -709,7 +709,7 @@
       // 1.0.49: these three are sold for coins now
       { id: 'p_robopup', price: 2300 }, { id: 'p_jelly', price: 2100 }, { id: 'p_panda', price: 2400 },
       // pets of the developer and friends: own sub-section, always exactly 1200 (PRICE_SCALE doesn't apply)
-      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya', 'lilu', 'sonya', 'asya', 'dusha', 'luna'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
+      ...['bonya', 'dixon', 'kurt', 'yosya', 'onya', 'lilu', 'sonya', 'asya', 'dusha', 'luna', 'pulya'].map(p => ({ id: 'd_' + p, price: 1200, fixed: 1, friend: 1 })),
       { id: 'lvl_star', price: 0, ex: 1 }
     ],
     emote: [
@@ -6649,7 +6649,9 @@
       const ty = 2.5;
       if (c.tag === 'heart') { g.fillStyle = (() => { const hg = g.createRadialGradient(-0.5, ty - 0.6, 0.1, 0, ty, 2); hg.addColorStop(0, '#ffd1dc'); hg.addColorStop(1, c.tagCol || '#ff3d6e'); return hg; })(); heartPath(g, 0, ty, 1.35); g.fill(); pE(g, -0.55, ty - 0.35, 0.35, 0.25, -0.5, 'rgba(255,255,255,0.85)'); }
       else if (c.tag === 'bone') { g.fillStyle = goldGrad(g, 0, ty, 1.6); for (const d of [-1, 1]) { pE(g, d * 1.25, ty - 0.45, 0.62, 0.62, 0, g.fillStyle); pE(g, d * 1.25, ty + 0.45, 0.62, 0.62, 0, g.fillStyle); } g.fillRect(-1.25, ty - 0.5, 2.5, 1); }
-      else if (c.tag === 'moon') {   // 1.0.69: a gold crescent moon
+      else if (c.tag === 'star') {   // 1.0.72: a gold star
+        g.fillStyle = goldGrad(g, 0, ty, 1.8); starPath(g, 0, ty + 0.2, 1.7); g.fill(); pE(g, -0.5, ty - 0.4, 0.3, 0.22, -0.4, 'rgba(255,255,255,0.85)');
+      } else if (c.tag === 'moon') {   // 1.0.69: a gold crescent moon
         g.fillStyle = goldGrad(g, 0, ty, 1.6); g.beginPath(); g.arc(0, ty, 1.55, 0, Math.PI * 2); g.arc(0.75, ty - 0.45, 1.25, 0, Math.PI * 2, true); g.fill();
         pE(g, -0.75, ty - 0.2, 0.25, 0.45, 0.3, 'rgba(255,255,255,0.8)');
       } else if (c.tag === 'bell') {
@@ -6924,7 +6926,7 @@
 
   // pet sub-section of the coin shop: pets of the developer and friends (fixed price, owner on the card)
   const PET_OWNER = { d_bonya: 'CR4YNE', d_dixon: 'xxennekk', d_kurt: { ru: 'семья Zeit', en: 'the Zeit family' },
-    d_lilu: { ru: 'семья CR4YNE', en: 'the CR4YNE family' }, d_sonya: 'Насики', d_asya: 'Насики', d_dusha: 'Pilulin', d_luna: 'Pilulin',
+    d_lilu: { ru: 'семья CR4YNE', en: 'the CR4YNE family' }, d_sonya: 'Насики', d_asya: 'Насики', d_dusha: 'Pilulin', d_luna: 'Pilulin', d_pulya: 'xxennekk',
     d_yosya: 'EZOKEYNE (Onitham)', d_onya: { ru: 'xxennekk и Leska', en: 'xxennekk & Leska' } };
   const petOwner = id => { const o = PET_OWNER[id]; return !o ? '' : typeof o === 'string' ? o : (S === TEXT.ru ? o.ru : o.en); };
 
@@ -7239,6 +7241,30 @@
       bowTie(g, hx - 1.1, hy - 5.4, 1.05, '#ff8fb8', '#ffffff');   // 1.0.60: a pink bow between the ears
       g.restore();
       petHead = [hx, hy + hop];
+    } else if (id === 'd_pulya') {   // Пуля (xxennekk) — 1.0.72: a very round golden British shorthair: a plush golden-ticked coat with a
+      // dark stripe down the spine, tabby lines on the forehead, a big round face with small rounded ears, half-closed amber eyes
+      // (a sleepy, slightly grumpy look), a white chin; short legs, a thick tail; a red collar with a gold star
+      quad(g, t * 0.95, still, { L: 6.8, w: 3.5, rx: 11.8, ry: 7.8, col: '#b48d52', belly: '#d9bf8e', paw: '#d6b98a', legCol: '#a8834a', f: 11, bounce: 1.1, noFlex: 0, sheen: 0.2, hdx: 3.5, hdy: 2,
+        under: (g, by) => fluff(g, 0, by + 0.6, 12, 7.9, 22, 0.06, '#9c7a44', 0),
+        marks: (g, by) => {
+          g.save(); g.beginPath(); g.ellipse(0, by, 11.8, 7.8, 0, 0, Math.PI * 2); g.clip();
+          const sp = g.createLinearGradient(0, by - 7.8, 0, by - 2); sp.addColorStop(0, 'rgba(70,48,22,0.75)'); sp.addColorStop(1, 'rgba(70,48,22,0)');
+          g.fillStyle = sp; g.beginPath(); g.ellipse(-0.5, by - 6.2, 10, 3.2, 0, 0, Math.PI * 2); g.fill();   // the dark stripe down the spine
+          g.globalAlpha *= 0.35; for (let k = -9; k < 9; k += 1.7) line(g, [k, by - 4, k - 0.8, by + 1], k % 3.4 < 1.7 ? '#7a5a2e' : '#e0c48e', 0.5); g.globalAlpha /= 0.35;   // golden ticking
+          g.restore();
+        },
+        ruff: '#c8a468',
+        collar: { col: '#d32f2f', tag: 'star' },
+        tail: (g, tx, ty, s, run) => { const q = tailChain(g, tx, ty, t, run, { n: 6, len: 13, prof: f => 4.2 - 1 * f, a: -2.45, curl: 0.1, amp: 0.22, lag: 0.8, fq: 1.3, col: '#a8834a', r: { a: -2.85, curl: 0.05, fq: 4.5 } });
+          for (let k = 2; k <= 6; k += 2) pE(g, q[k][0], q[k][1], 2.4, 2.4, 0, 'rgba(90,64,30,0.55)'); pE(g, q[6][0], q[6][1], 2.2, 2.2, 0, '#6e5230'); },   // a thick plush tail with dark rings and tip
+        head: (g, hx, hy, t, run) => cuteCatHead(g, hx, hy, t, run, { col: '#b8925a', r: 7.6, earH: 5, earIn: '#d9a08c', iris: '#e0a92a', lid: 0.5, eyeR: 2.5,
+          muzzle: '#efe2c4', chin: '#f8f1e2', nose: '#c98a7a', whisk: '#fff8ea', blush: 0.25, cheeks: '#bf9a60', tuft: '#efe2c4', seed: 4.1,
+          pattern: (g, x, y, r) => {   // tabby lines on the forehead and the darker crown
+            const cg = g.createLinearGradient(0, y - r, 0, y - r * 0.3); cg.addColorStop(0, 'rgba(90,64,30,0.45)'); cg.addColorStop(1, 'rgba(90,64,30,0)');
+            g.fillStyle = cg; g.fillRect(x - r, y - r, r * 2, r);
+            for (const k of [-0.3, -0.05, 0.2, 0.45]) line(g, [x + r * k, y - r * 0.9, x + r * (k + 0.04), y - r * 0.48], 'rgba(90,64,30,0.6)', r * 0.08);
+            for (const dy of [0, 0.2]) line(g, [x - r * 0.45, y + r * (0.08 + dy), x - r * 0.9, y + r * (0.16 + dy * 1.3)], 'rgba(90,64,30,0.5)', r * 0.07);   // cheek lines
+          } }) });
     } else if (id === 'd_luna') {   // Луна (Pilulin) — 1.0.69: a silver Scottish Fold: a plush white-silver coat with grey tipping on the back
       // and the head, a fluffy chest and cheeks, tiny folded ears, big round eyes, a pink nose and the tip of her tongue out;
       // a lilac collar with a little gold crescent moon
