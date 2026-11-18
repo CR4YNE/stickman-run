@@ -26,9 +26,16 @@
   }
   #game { display: block; position: absolute; inset: 0; touch-action: none; }
   #loading {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 24px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,.4);
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 18px; align-items: center; justify-content: center;
+    color: #fff; background: radial-gradient(circle at 50% 45%, #2b1d4f, #140c26);
   }
+  #loading .crlogo { width: min(64vw, 380px); height: auto; aspect-ratio: 230 / 56; filter: drop-shadow(0 4px 14px rgba(255,90,60,.35)); animation: crIn .9s ease-out both; }
+  .ldbar { width: min(40vw, 220px); height: 6px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; }
+  .ldbar i { display: block; width: 40%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffd23f, #ff7a2f, #e5265f); animation: ldMove 1.1s ease-in-out infinite; }
+  @keyframes ldMove { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  @keyframes crIn { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
+  .devline { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 0; color: #1d1d26; font-size: 12px; opacity: .8; }
+  .devline .crlogo { width: 92px; height: auto; aspect-ratio: 230 / 56; }
   #ui {
     position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
     background: rgba(10, 16, 40, .45); padding: 16px; box-sizing: border-box;
@@ -182,7 +189,7 @@
     touch-action: none; box-shadow: 0 4px 12px rgba(0,0,0,.25);
   }
   #bSlide.hidden, #bJump.hidden { display: none; }
-  /* 1.0.56: two big touch buttons вЂ” jump on the left, slide on the right (a tap on the screen still jumps too) */
+  /* 1.0.56: two big touch buttons — jump on the left, slide on the right (a tap on the screen still jumps too) */
   #bJump {
     position: absolute; left: 16px; bottom: 16px; width: 84px; height: 84px; border-radius: 50%;
     border: 0; background: rgba(255,255,255,.8); color: #1d1d26; font-size: 34px; font-weight: 900;
@@ -203,10 +210,31 @@
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="loading">вЂ¦</div>
+<!-- 1.0.61: the developer logo (CR4YNE ~ "crane": an origami crane), used on the loading screen and under the menu -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="crSun" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset=".5" stop-color="#ff7a2f"/><stop offset="1" stop-color="#e5265f"/></linearGradient>
+    <linearGradient id="crWingA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe17a"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient>
+    <linearGradient id="crWingB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a4d"/><stop offset="1" stop-color="#e5265f"/></linearGradient>
+  </defs>
+  <symbol id="crlogo" viewBox="0 0 230 56">
+    <!-- an origami crane (CR4YNE ~ "crane"), flying left: neck and head, two folded wings, body and tail -->
+    <g stroke-linejoin="round">
+      <polygon points="30,26 46,4 40,28" fill="url(#crWingB)"/>
+      <polygon points="14,30 30,24 44,28 30,38" fill="#c2185b"/>
+      <polygon points="14,30 30,24 30,38" fill="#e5265f"/>
+      <polygon points="26,27 14,6 34,25" fill="url(#crWingA)"/>
+      <polygon points="17,30 6,14 13,31" fill="#ff7a2f"/>
+      <polygon points="6,14 1,17 8,17" fill="#ffd23f"/>
+      <polygon points="40,28 54,16 44,31" fill="#ff5a3c"/>
+    </g>
+    <text x="60" y="41" font-family="'Arial Black','Segoe UI Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="38" letter-spacing="1" fill="currentColor">CR<tspan fill="url(#crSun)">4</tspan>YNE</text>
+  </symbol>
+</svg>
+<div id="loading"><svg class="crlogo"><use href="#crlogo"/></svg><div class="ldbar"><i></i></div></div>
 <div id="ui"><div class="panel" id="panel"></div></div>
-<button id="bJump" class="hidden" aria-label="jump"><small>РїСЂС‹Р¶РѕРє</small></button>
-<button id="bSlide" class="hidden" aria-label="slide"><small>РїРѕРґРєР°С‚</small></button>
+<button id="bJump" class="hidden" aria-label="jump"><small>прыжок</small></button>
+<button id="bSlide" class="hidden" aria-label="slide"><small>подкат</small></button>
 <div id="toast"></div>
 <div id="hud">
   <button id="bSound" aria-label="sound"></button>
@@ -218,7 +246,7 @@
 <script>
   // 1.0.60: on a phone the game goes full screen on the first tap (and again after leaving it), landscape locked,
   // so no browser bar is left on top. Not inside Yandex Games (an iframe: the platform does it) and not in an installed app
-  // that is full screen already. iPhone Safari has no full-screen API: there "РќР° СЌРєСЂР°РЅ Р”РѕРјРѕР№" gives the full screen.
+  // that is full screen already. iPhone Safari has no full-screen API: there "На экран Домой" gives the full screen.
   (function () {
     const phone = matchMedia('(pointer: coarse)').matches;
     const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;

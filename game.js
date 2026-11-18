@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.60';
+  const VERSION = '1.0.61';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -27,7 +27,7 @@
       hintPc: 'Пробел, ↑ или клик — прыжок. ↓, S или правая кнопка мыши — подкат (в воздухе — быстро вниз).',
       hintTouch: 'Нажми на экран — прыжок. Кнопка ▼ — подкат (в воздухе — быстро вниз).',
       allDone: 'Все уровни пройдены!',
-      allDoneText: 'Все 15 уровней позади! Дальше — бесконечный забег, задания и магазин.',
+      allDoneText: 'Все 50 уровней позади! Дальше — бесконечный забег, задания и магазин.',
       total: 'Звёзды',
       endless: '∞ Бесконечный забег', endlessShort: 'Бесконечный забег',
       endlessLocked: '🔒 Бесконечный забег — пройди 5 уровней',
@@ -178,7 +178,7 @@
         loot: [['Сюрприз!', 'Лутоман', 'Счастливчик'], 'Открой {n} лутбоксов'],
         gold: [['Золотоискатель', 'Золотая жила', 'Царь Мидас'], 'Собери {n} золотых монет'],
         lives: [['Кошачьи жизни'], 'Спасись второй жизнью {n} раз'],
-        ws: [['Звёзды лугов', 'Звёзды испытаний', 'Звёзды мастера'], 'Собери все 25 звёзд в мире {n}'],
+        ws: [['Звёзды лугов', 'Звёзды испытаний', 'Звёзды мастера', 'Звёзды сакуры', 'Звёзды глубин', 'Звёзды пирамид', 'Звёзды прерий', 'Сладкие звёзды', 'Огненные звёзды', 'Неоновые звёзды'], 'Собери все 25 звёзд в мире {n}'],
         cat3: [{ color: 'Палитра', hat: 'Шляпник', shorts: 'Модные шорты', shoes: 'Обувщик', acc: 'Аксессуарчик', trail: 'Следопыт', jump: 'Прыгучий стиль', pet: 'Друг зверей', emote: 'Артист', theme: 'Путешественник' }, 'Получи 3 вещи в разделе «{c}»'],
         catAll: [{ color: 'Все цвета радуги', hat: 'Король шляп', shorts: 'Гардероб шорт', shoes: 'Сороконожка', acc: 'Весь блеск', trail: 'Все шлейфы', jump: 'Мастер прыжков', pet: 'Зоопарк', emote: 'Звезда сцены', theme: 'Весь мир' }, 'Собери все вещи раздела «{c}», что продаются за монеты ({n})']
       },
@@ -256,7 +256,7 @@
         'Почти финиш!',
         'Последний уровень — космос!'
       ],
-      world: 'Мир', worlds: ['Луга', 'Испытания', 'Мастер'],
+      world: 'Мир', worlds: ['Луга', 'Испытания', 'Мастер', 'Сакура', 'Подводный мир', 'Египет', 'Дикий Запад', 'Конфетная страна', 'Вулкан', 'Неоновый город'],
       endlessOpen: 'Открыт бесконечный забег! Он в меню, а дальше ждут уровни 6–15.'
     },
     en: {
@@ -268,7 +268,7 @@
       hintPc: 'Space, ↑ or click to jump. ↓, S or right mouse button to slide (in the air it drops you fast).',
       hintTouch: 'Tap to jump. ▼ button to slide (in the air it drops you fast).',
       allDone: 'All levels complete!',
-      allDoneText: 'All 15 levels done! Next: the endless run, tasks and the shop.',
+      allDoneText: 'All 50 levels done! Next: the endless run, tasks and the shop.',
       total: 'Stars',
       endless: '∞ Endless run', endlessShort: 'Endless run',
       endlessLocked: '🔒 Endless run — beat 5 levels',
@@ -419,7 +419,7 @@
         loot: [['Surprise!', 'Loot lover', 'Lucky one'], 'Open {n} loot boxes'],
         gold: [['Gold seeker', 'Gold vein', 'King Midas'], 'Collect {n} gold coins'],
         lives: [['Nine lives'], 'Be saved by a second life {n} times'],
-        ws: [['Meadow stars', 'Trial stars', 'Master stars'], 'Collect all 25 stars in world {n}'],
+        ws: [['Meadow stars', 'Trial stars', 'Master stars', 'Sakura stars', 'Deep stars', 'Pyramid stars', 'Prairie stars', 'Sweet stars', 'Fire stars', 'Neon stars'], 'Collect all 25 stars in world {n}'],
         cat3: [{ color: 'Palette', hat: 'Hatter', shorts: 'Smart shorts', shoes: 'Shoemaker', acc: 'Accessorised', trail: 'Trailblazer', jump: 'Jump style', pet: 'Animal friend', emote: 'Performer', theme: 'Traveller' }, 'Get 3 items in “{c}”'],
         catAll: [{ color: 'Every colour', hat: 'King of hats', shorts: 'Shorts wardrobe', shoes: 'Centipede', acc: 'All the bling', trail: 'All the trails', jump: 'Jump master', pet: 'Zoo', emote: 'Star of the stage', theme: 'The whole world' }, 'Collect every “{c}” item sold for coins ({n})']
       },
@@ -497,7 +497,7 @@
         'Almost there!',
         'The last level — space!'
       ],
-      world: 'World', worlds: ['Meadows', 'Trials', 'Master'],
+      world: 'World', worlds: ['Meadows', 'Trials', 'Master', 'Sakura', 'Underwater', 'Egypt', 'Wild West', 'Candy Land', 'Volcano', 'Neon City'],
       endlessOpen: 'Endless run unlocked! It is in the menu, and levels 6–15 are next.'
     }
   };
@@ -803,8 +803,8 @@
   const achR = r => Math.max(5, Math.round(r * ACH_SCALE / 5) * 5);
   for (const [pre, val, targets, rewards] of ACH_GROUPS)
     targets.forEach((n, i) => ACH.push([`${pre}${i}`, n, achR(rewards[i]), val, pre, i]));
-  // all 15 stars of a world
-  [0, 1, 2].forEach(w => ACH.push([`ws${w}`, 25, achR([40, 60, 80][w]), () => save.stars.slice(w * 5, w * 5 + 5).reduce((a, b) => a + b, 0), 'ws', w]));
+  // all 25 stars of a world (1.0.61: ten worlds)
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(w => ACH.push([`ws${w}`, 25, achR([40, 60, 80, 90, 100, 110, 120, 130, 140, 150][w]), () => save.stars.slice(w * 5, w * 5 + 5).reduce((a, b) => a + b, 0), 'ws', w]));
   // every shop section: 3 items, then everything that is sold for coins
   const coinItems = cat => SHOP[cat].filter(it => it.price > 0);
   const ownedIn = cat => coinItems(cat).filter(it => save.owned.includes(it.id)).length;
@@ -1080,9 +1080,23 @@
     { speed: 410, len: 20000, types: ['spike', 'box', 'gap', 'bird', 'birdHigh', 'boxspike', 'beam', 'saw', 'plat', 'bridge', 'puddle'],
       sky: ['#05030f', '#1a1440'], far: '#2b2357', near: '#1a1538', grass: '#6a5acd', dirt: '#2a2340', sun: '#c9b8ff', stick: '#f2f2f2', night: 1, decor: 'space' }
   ];
+  // 1.0.61: seven more worlds of 5 levels each (50 levels in all). Each one dresses in a shop world's look and leans on
+  // its own mix of obstacles; speed and length grow world by world (world 10 ends at ~470 px/s, close to the endless top speed).
+  const NEW_WORLDS = [
+    ['sakura', ['spike', 'box', 'beam', 'gap', 'bird', 'coinrow']],
+    ['underwater', ['puddle', 'beam', 'birdHigh', 'box', 'saw', 'gap', 'spike']],
+    ['egypt', ['boxspike', 'spike', 'plat', 'gap', 'beam', 'bird', 'box']],
+    ['wildwest', ['box', 'boxspike', 'bridge', 'saw', 'birdHigh', 'spike', 'gap']],
+    ['candy', ['plat', 'bridge', 'puddle', 'saw', 'beam', 'spike', 'coinrow', 'box']],
+    ['volcano', ['gap', 'plat', 'bridge', 'saw', 'boxspike', 'birdHigh', 'spike', 'beam']],
+    ['neoncity', ['spike', 'box', 'gap', 'bird', 'birdHigh', 'boxspike', 'beam', 'saw', 'plat', 'bridge', 'puddle']]
+  ];
+  NEW_WORLDS.forEach(([th, types], k) => { for (let j = 0; j < 5; j++)
+    LEVELS.push(Object.assign({}, THEMES[th], { speed: 345 + k * 14 + j * 10, len: 15000 + k * 1000 + j * 1000, types })); });
   const ENDLESS_AFTER = 4;            // finishing level 5 unlocks the endless run
-  const WORLD_STARS = [0, 17, 42];   // 1.0.45: 5 stars per level now (was 10 / 25 of 3 per level)
-  const WORLDS = [[0, 5], [5, 10], [10, 15]];
+  // stars needed to open each world (5 per level, 25 per world): about 80 % of everything before it
+  const WORLD_STARS = [0, 17, 42, 60, 80, 100, 120, 140, 160, 180];
+  const WORLDS = LEVELS.map((_, i) => i).filter(i => i % 5 === 0).map(i => [i, i + 5]);
   const ENDLESS = LEVELS.length;   // lvl index used for the endless run
 
   function rng(seed) {
@@ -1450,7 +1464,7 @@
   }
   const allDone = () => save.done[ENDLESS_AFTER] > 0;   // endless run unlocked
   const starSum = () => save.stars.reduce((a, b) => a + b, 0);
-  const worldOf = i => i < 5 ? 0 : i < 10 ? 1 : 2;
+  const worldOf = i => Math.min(WORLDS.length - 1, Math.floor(i / 5));
   function worldOpen(w) {
     if (w === 0 || save.wOpen[w]) return true;
     if (starSum() >= WORLD_STARS[w]) { save.wOpen[w] = 1; return true; }
@@ -6570,10 +6584,10 @@
   function ownerHeart(g, x, y, t) {
     const u = (t % 4.6) / 1.5;
     if (u >= 1) return;
-    const s = 1.3 + u * 0.7, hx = x - 1.5 + Math.sin(u * 7) * 1.3, hy = y - 11 - u * 10;
+    const s = 1.8 + u * 0.8, hx = x - 1.5 + Math.sin(u * 7) * 1.3, hy = y - 12 - u * 10;
     g.save(); g.globalAlpha *= Math.sin(u * Math.PI) * 0.95;
     const hg = g.createRadialGradient(hx - s * 0.4, hy - s * 0.4, 0.1, hx, hy, s * 1.5); hg.addColorStop(0, '#ffc2d3'); hg.addColorStop(1, '#ff3d72');
-    g.fillStyle = hg; heartPath(g, hx, hy, s); g.fill();
+    g.fillStyle = hg; heartPath(g, hx, hy, s); g.fill(); g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 0.45; g.stroke();
     pE(g, hx - s * 0.45, hy - s * 0.28, s * 0.26, s * 0.18, -0.5, 'rgba(255,255,255,0.85)');
     g.restore();
   }
@@ -6586,14 +6600,14 @@
     g.save(); g.translate(x, y); g.rotate(tilt); g.translate(-x, -y);
     const tw = (t + sd * 3) % 5.3, ew = run ? Math.sin(t * 9) * 0.05 : tw < 0.3 ? Math.sin(tw * 30) * 0.22 : 0;   // an ear twitch now and then
     const ear = (ex, back) => {
-      g.save(); g.translate(x + ex, y - r * 0.5); g.rotate(back ? -0.3 : 0.14 + ew);
+      g.save(); g.translate(x + ex, y - r * 0.5); g.rotate(back ? -0.3 : 0.1 + ew);
       const h = (o.earH || 7.2) * (r / 6.4), bw = 3.5 * (r / 6.4);
       g.fillStyle = vGrad(g, -h, 1, shade(col, back ? 0.8 : 1.1), shade(col, back ? 0.62 : 0.85));
       g.beginPath(); g.moveTo(-bw, 1.4); g.quadraticCurveTo(-bw * 0.55, -h * 0.6, 0.2, -h); g.quadraticCurveTo(bw * 0.75, -h * 0.55, bw, 1.6); g.closePath(); g.fill();
       if (o.earIn) {
         g.fillStyle = vGrad(g, -h * 0.75, 0, shade(o.earIn, back ? 0.8 : 1.05), shade(o.earIn, back ? 0.6 : 0.82));
         g.beginPath(); g.moveTo(-bw * 0.5, 0.8); g.quadraticCurveTo(-bw * 0.3, -h * 0.45, 0.2, -h * 0.72); g.quadraticCurveTo(bw * 0.45, -h * 0.4, bw * 0.55, 0.9); g.closePath(); g.fill();
-        if (!back) { g.globalAlpha *= 0.8; for (const [a0, l] of [[-0.25, 2.6], [0.1, 3.2], [0.4, 2.4]]) line(g, [0, 0.6, Math.sin(a0) * l, 0.6 - Math.cos(a0) * l], o.tuft || shade(col, 1.6), 0.35); g.globalAlpha /= 0.8; }
+        if (!back) { const fg = g.createRadialGradient(0, 0.8, 0.2, 0, 0.4, bw * 0.75); fg.addColorStop(0, o.tuft || shade(col, 1.5)); fg.addColorStop(1, 'rgba(255,255,255,0)'); g.globalAlpha *= 0.7; g.fillStyle = fg; g.beginPath(); g.ellipse(0, 0.2, bw * 0.6, bw * 0.75, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha /= 0.7; }   // 1.0.61: soft fluff, no streaks
       }
       g.restore();
     };
@@ -6632,7 +6646,7 @@
     g.globalAlpha *= 0.75;
     for (const [dy, l] of [[-0.05, 1.1], [0.1, 1.2], [0.25, 1.0]]) line(g, [x + r * 1.0, y + r * (0.42 + dy * 0.5), x + r * (1.0 + l), y + r * (0.3 + dy * 1.6)], o.whisk || '#f5f5f5', r * 0.05);
     g.globalAlpha /= 0.75;
-    if (!o.noEars) ear(r * 0.3, 0);
+    if (!o.noEars) ear(r * 0.18, 0);
     g.restore();
   }
   // a dog ear: 'up' (pointy, upright) or 'fold' (a triangle flap folding forward); flops as the dog runs
@@ -6919,8 +6933,8 @@
             pE(g, x - r * 0.75, y - r * 0.55, r * 0.5, r * 0.45, 0, '#9a5e2a');   // darker where the ears grow
             g.fillStyle = '#fbfbf7'; g.beginPath(); g.moveTo(x + r * 0.35, y - r); g.quadraticCurveTo(x + r * 0.62, y - r * 0.3, x + r * 0.5, y + r * 0.3); g.lineTo(x + r * 0.8, y + r * 0.3); g.quadraticCurveTo(x + r * 0.75, y - r * 0.4, x + r * 0.55, y - r); g.closePath(); g.fill();   // the white blaze
           },
-          earBack: (g, x, y, r) => dogEar(g, x - r * 0.72, y - r * 0.3, 'fold', -0.75, '#b97636', '#7d4a1e', null, t, run, 0.85),
-          earFront: (g, x, y, r) => dogEar(g, x - r * 0.05, y - r * 0.6, 'fold', 0.65, '#c98b4a', '#8a5222', null, t, run, 0.92) }) });
+          earBack: (g, x, y, r) => dogEar(g, x - r * 0.88, y - r * 0.45, 'fold', -0.9, '#b97636', '#7d4a1e', null, t, run, 0.72),
+          earFront: (g, x, y, r) => dogEar(g, x - r * 0.55, y - r * 0.74, 'fold', -0.15, '#c98b4a', '#8a5222', null, t, run, 0.7) }) });   // 1.0.61: the flaps end above the eyes
     } else if (id === 'fox') {
       quad(g, t, still, { L: 9.5, w: 2.4, rx: 11, ry: 5.4, col: '#f07a22', legCol: '#3e2723', paw: '#2b1c18', belly: '#fff3e6',
         tail: (g, tx, ty, s, run) => tailChain(g, tx, ty, t, run, { n: 8, len: 20, prof: f => 3 + 6.5 * Math.sin(Math.min(1, f * 1.05) * Math.PI * 0.82), a: -2.75, curl: -0.02, amp: 0.12, lag: 0.85, fq: 2.2, col: '#f07a22', under: '#c9561a', tip: '#fff8ee', tipFrom: 0.86, r: { a: -2.95, amp: 0.1, fq: 5 } }),   // a fox: a heavy bushy brush that floats behind
@@ -7999,7 +8013,8 @@
         <button class="mini" data-act="profile">${S.profileBtn}</button>
         ${canShortcut && !save.shortcut ? `<button class="mini hot" data-act="shortcut">${S.shortcutBtn}</button>` : ''}
       </div>
-      <p class="small">${S.total}: ${totalStars}/${LEVELS.length * 5}${save.bestEndless ? ` · ${S.record}: ${save.bestEndless} ${S.m}` : ''} · v${VERSION}</p>`, 'menu');
+      <p class="small">${S.total}: ${totalStars}/${LEVELS.length * 5}${save.bestEndless ? ` · ${S.record}: ${save.bestEndless} ${S.m}` : ''}</p>
+      <p class="devline"><svg class="crlogo" aria-label="CR4YNE"><use href="#crlogo"/></svg><span>v${VERSION}</span></p>`, 'menu');   // 1.0.61: the developer under the menu
   }
 
   // before every endless run: buy a magnet, see the second life
@@ -9375,6 +9390,7 @@
     const arr = (a, n) => { const out = Array.isArray(a) ? a.slice() : []; while (out.length < n) out.push(0); return out.map(v => v | 0); };
     save.stars = arr(save.stars, LEVELS.length).map(v => Math.max(0, Math.min(5, v)));
     save.done = arr(save.done, LEVELS.length).map(v => v ? 1 : 0);
+    while (save.done[save.unlocked] && save.unlocked + 1 < LEVELS.length) save.unlocked++;   // 1.0.61: new levels after the last finished one
     save.best = arr(save.best, LEVELS.length);
     save.wallet = Math.max(0, save.wallet | 0);
     save.magnets = Math.max(0, save.magnets | 0);
