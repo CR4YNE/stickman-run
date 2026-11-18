@@ -1,7 +1,7 @@
 // Offline support for the installed app (PWA) on iOS, Android, Windows and macOS.
 // The cache name carries the game version: release.ps1 writes it, so every release replaces the old files.
-const CACHE = 'stickman-run-1.0.57';
-const FILES = ['./', './index.html', './game.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const CACHE = 'stickman-run-1.0.58';
+const FILES = ['./', './index.html', './game.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

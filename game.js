@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.57';
+  const VERSION = '1.0.58';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -19,7 +19,7 @@
   // =====================================================================
   const TEXT = {
     ru: {
-      title: 'Стикмен: Забег',
+      title: 'Stickman Run',
       play: 'Играть', levelN: 'Уровень', pause: 'Пауза', resume: 'Продолжить',
       retry: 'Заново', menu: 'В меню', next: 'Дальше', back: 'Назад',
       fail: 'Упс!', failText: 'Пройдено: ', win: 'Уровень пройден!',
@@ -9181,7 +9181,7 @@
       galleryBeams: (list) => { ctx.setTransform(DPR * scale, 0, 0, DPR * scale, 0, 0); list.forEach((k, i) => drawBeam(k, 14 + i * 34, 26, groundY - 32)); },
       forceCrit: () => { crit = null; critNext = 0; }, critInfo: () => crit && { x: crit.x, t0: crit.t0, k: crit.k, critNext }, CRITTERS,
       galleryBoxes: (g, list, gy) => withCtx(g, gy, () => list.forEach((k, i) => { const tm = time; drawBox(k, 20 + (i % 5) * 150, 56, i % 2 ? 56 : 34); drawCoinAt(g, 120 + (i % 5) * 150, gy - 30, [1, 5, 25][i % 3], tm * 4 + i, i); })),
-      galleryHazards: (list) => { ctx.setTransform(DPR * scale, 0, 0, DPR * scale, 0, 0); (list || ['wild', 'jungle', 'desert', 'winter', 'city', 'space', 'volcano', 'candy', 'ocean']).forEach((k, i) => { ctx.fillStyle = '#9ccc65'; ctx.fillRect(20 + i * 58, groundY, 50, 60); drawHazard(k, 32 + i * 58, 26, 30); drawPuddle(k, 20 + i * 58, 50); }); }, overGap, platTop, baseSpeed, ENDLESS, LEVELS, AIR, PEAK, drawStick, drawPet, drawBird, BIRDS,
+      galleryHazards: (list) => { ctx.setTransform(DPR * scale, 0, 0, DPR * scale, 0, 0); (list || ['wild', 'jungle', 'desert', 'winter', 'city', 'space', 'volcano', 'candy', 'ocean']).forEach((k, i) => { ctx.fillStyle = '#9ccc65'; ctx.fillRect(20 + i * 58, groundY, 50, 60); drawHazard(k, 32 + i * 58, 26, 30); drawPuddle(k, 20 + i * 58, 50); }); }, overGap, platTop, baseSpeed, ENDLESS, LEVELS, AIR, PEAK, drawStick, drawPet, drawBird, BIRDS, drawCoinAt, setWorld: k => { save.look.theme = k; },
       testLoad: d => { for (const k of Object.keys(save)) delete save[k]; Object.assign(save, JSON.parse(JSON.stringify(DEFAULT_SAVE))); applyLoaded(d); return save; } };
   }
 

@@ -1,4 +1,4 @@
-# Стикмен: Забег
+# Stickman Run
 
 Играть: **https://cr4yne.github.io/stickman-run/**
 

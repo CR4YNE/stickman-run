@@ -1,7 +1,7 @@
 {
-  "name": "Стикмен: Забег",
-  "short_name": "Стикмен",
-  "description": "Беги, прыгай, собирай монеты — 20 миров, сотни вещей и питомцев.",
+  "name": "Stickman Run",
+  "short_name": "Stickman Run",
+  "description": "Р‘РµРіРё, РїСЂС‹РіР°Р№, СЃРѕР±РёСЂР°Р№ РјРѕРЅРµС‚С‹ вЂ” 20 РјРёСЂРѕРІ, СЃРѕС‚РЅРё РІРµС‰РµР№ Рё РїРёС‚РѕРјС†РµРІ.",
   "lang": "ru",
   "start_url": "./index.html",
   "scope": "./",
@@ -9,10 +9,10 @@
   "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
   "background_color": "#6ec6ff",
-  "theme_color": "#4fb3ff",
+  "theme_color": "#ff7a2f",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
