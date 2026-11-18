@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const VERSION = '1.0.74';
+  const VERSION = '1.0.75';
   // the developer switch exists on the own computer (localhost, or index.html opened as a file)
   // and anywhere with ?dev=1 in the address (remembered; ?dev=0 removes it again)
   const DEV_HOST = (() => {
@@ -838,7 +838,7 @@
     { id: 'magnet_perm', yan: 50, sec: 'main' },
     { id: 'life', yan: 70, sec: 'main' },
     { id: 'unlock_all', yan: 70, sec: 'main' },   // 1.0.73: every premium skin and pet
-    ...[[500, 3], [1000, 6], [2000, 11], [4000, 20], [10000, 48], [25000, 110]]   // 1.0.60 prices
+    ...[[500, 3], [1000, 5], [2000, 9], [4000, 17], [10000, 40], [25000, 90]]   // 1.0.75 prices
       .map(([c, y]) => ({ id: 'coins_' + c, yan: y, coins: c, consumable: true, sec: 'coins' })),
     // 1.0.50: new premium characters; of the old ones only the robot, the vampire and the clown are still sold
     ...['starknight', 'spider', 'darkhero', 'superwarrior', 'ghosthunter', 'cybersamurai', 'wizardkid', 'luchador', 'catstronaut', 'pumpkin', 'snowgangster', 'dinosuit', 'dj', 'ghostknight', 'lavagolem', 'iceking', 'alien', 'pharaoh', 'hacker', 'angel', 'demon', 'racer', 'rockstar']
