@@ -188,7 +188,9 @@
     border: 0; background: rgba(255,255,255,.8); color: #1d1d26; font-size: 34px; font-weight: 900;
     touch-action: none; box-shadow: 0 4px 12px rgba(0,0,0,.25);
   }
-  #bJump small, #bSlide small { display: block; font-size: 11px; font-weight: 800; margin-top: -4px; }
+  /* 1.0.60: only the words on the touch buttons, no arrows */
+  #bJump small, #bSlide small { display: block; font-size: 15px; font-weight: 900; letter-spacing: .2px; }
+  #hud .pz { display: block; width: 5px; height: 18px; margin: 0 2.5px; border-radius: 2px; background: currentColor; }
   #bJump:active, #bSlide:active { transform: scale(.94); background: rgba(255,214,0,.9); }
   #hud { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
   #hud button {
@@ -203,17 +205,33 @@
 <canvas id="game"></canvas>
 <div id="loading">вЂ¦</div>
 <div id="ui"><div class="panel" id="panel"></div></div>
-<button id="bJump" class="hidden" aria-label="jump">в–І<small>РїСЂС‹Р¶РѕРє</small></button>
-<button id="bSlide" class="hidden" aria-label="slide">в–ј<small>РїРѕРґРєР°С‚</small></button>
+<button id="bJump" class="hidden" aria-label="jump"><small>РїСЂС‹Р¶РѕРє</small></button>
+<button id="bSlide" class="hidden" aria-label="slide"><small>РїРѕРґРєР°С‚</small></button>
 <div id="toast"></div>
 <div id="hud">
   <button id="bSound" aria-label="sound"></button>
-  <button id="bPause" aria-label="pause" class="hidden">II</button>
+  <button id="bPause" aria-label="pause" class="hidden"><i class="pz"></i><i class="pz"></i></button>
 </div>
 <!-- Yandex Games SDK (served by the platform) -->
 <script src="/sdk.js"></script>
 <script src="game.js"></script>
 <script>
+  // 1.0.60: on a phone the game goes full screen on the first tap (and again after leaving it), landscape locked,
+  // so no browser bar is left on top. Not inside Yandex Games (an iframe: the platform does it) and not in an installed app
+  // that is full screen already. iPhone Safari has no full-screen API: there "РќР° СЌРєСЂР°РЅ Р”РѕРјРѕР№" gives the full screen.
+  (function () {
+    const phone = matchMedia('(pointer: coarse)').matches;
+    const installed = matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+    const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!phone || installed || window.top !== window || !req) return;
+    const go = () => {
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
+      const p = req.call(el, { navigationUI: 'hide' });
+      if (p && p.then) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+    };
+    addEventListener('pointerup', go, true);
+    addEventListener('touchend', go, true);
+  })();
   // offline app mode everywhere except Yandex Games (there the platform hosts and updates the game itself)
   if ('serviceWorker' in navigator && !/yandex|games\.s3/i.test(location.hostname) && (location.protocol === 'https:' || location.hostname === 'localhost'))
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
